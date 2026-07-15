@@ -19,6 +19,15 @@ import type GameScene from "../scenes/game-scene"
 import DraggableObject from "./draggable-object"
 import ItemDetail from "./item-detail"
 
+const MOBILE_POINTER_QUERY = "(hover: none) and (pointer: coarse)"
+const MOBILE_INVENTORY_SCALE = 1.3
+
+export const isCoarsePointer = () =>
+  window.matchMedia(MOBILE_POINTER_QUERY).matches
+
+export const getInventoryScale = (pokemonId: string | null) =>
+  pokemonId === null && isCoarsePointer() ? MOBILE_INVENTORY_SCALE : 1
+
 export default class ItemContainer extends DraggableObject {
   scene: GameScene
   detail: ItemDetail | undefined
@@ -31,6 +40,7 @@ export default class ItemContainer extends DraggableObject {
   pokemonId: string | null
   playerId: string
   mouseoutTimeout: NodeJS.Timeout | null = null
+  displayScale: number
 
   constructor(
     scene: GameScene,
@@ -41,12 +51,14 @@ export default class ItemContainer extends DraggableObject {
     playerId: string
   ) {
     const currentPlayerUid = getGameScene()?.uid
-    const itemSize = pokemonId === null ? 60 : 25
+    const inventoryScale = getInventoryScale(pokemonId)
+    const itemSize = pokemonId === null ? 60 * inventoryScale : 25
     super(scene, x, y, itemSize, itemSize, playerId !== currentPlayerUid)
     this.name = item
     this.scene = scene
     this.pokemonId = pokemonId
     this.playerId = playerId
+    this.displayScale = inventoryScale
     this.circle = scene.add.image(0, 0, "cell", this.cellIndex * 3)
     this.draggable =
       this.pokemonId === null &&
@@ -55,7 +67,9 @@ export default class ItemContainer extends DraggableObject {
     if (pokemonId) {
       this.circle.setFrame(this.cellIndex * 3 + 2).setScale(0.45)
     } else {
-      this.circle.setFrame(this.cellIndex * 3 + (this.draggable ? 0 : 2))
+      this.circle
+        .setFrame(this.cellIndex * 3 + (this.draggable ? 0 : 2))
+        .setScale(this.displayScale)
     }
     this.add(this.circle)
     this.sprite = new GameObjects.Image(
@@ -64,10 +78,11 @@ export default class ItemContainer extends DraggableObject {
       0,
       "item",
       item + ".png"
-    ).setScale(pokemonId === null ? 0.5 : 0.25)
+    ).setScale(pokemonId === null ? 0.5 * this.displayScale : 0.25)
 
     this.add(this.sprite)
     this.setInteractive()
+    this.on("pointerupoutside", () => this.onPointerUp())
     this.updateDropZone(true)
   }
 
@@ -141,6 +156,9 @@ export default class ItemContainer extends DraggableObject {
   onPointerUp() {
     super.onPointerUp()
     this.updateDropZone(false)
+    if (isCoarsePointer() && this.detail?.visible) {
+      this.closeDetail()
+    }
   }
 
   openDetail() {
@@ -200,7 +218,7 @@ export default class ItemContainer extends DraggableObject {
       0,
       "item",
       item + ".png"
-    ).setScale(this.pokemonId === null ? 0.5 : 0.25)
+    ).setScale(this.pokemonId === null ? 0.5 * this.displayScale : 0.25)
     this.tempDetail = new ItemDetail(this.scene, 0, 0, item as any)
     this.tempDetail.setDepth(DEPTH.TOOLTIP)
     this.tempDetail.setPosition(
@@ -215,7 +233,7 @@ export default class ItemContainer extends DraggableObject {
   updateCount(value: number) {
     if (this.countText === undefined) {
       const textStyle = {
-        fontSize: "16px",
+        fontSize: `${16 * this.displayScale}px`,
         fontFamily: "Jost",
         color: "#FFFFFF",
         align: "center",
@@ -223,7 +241,13 @@ export default class ItemContainer extends DraggableObject {
         stroke: "#000000"
       }
       this.countText = this.scene.add.existing(
-        new GameObjects.Text(this.scene, 15, -12, value.toString(), textStyle)
+        new GameObjects.Text(
+          this.scene,
+          15 * this.displayScale,
+          -12 * this.displayScale,
+          value.toString(),
+          textStyle
+        )
       )
       this.add(this.countText)
       this.countText.setAlign("left")

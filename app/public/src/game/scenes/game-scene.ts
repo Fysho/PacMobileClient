@@ -38,7 +38,7 @@ import AnimationManager from "../animation-manager"
 import { clearAbilityAnimations } from "../components/abilities-animations"
 import BattleManager from "../components/battle-manager"
 import BoardManager from "../components/board-manager"
-import ItemContainer from "../components/item-container"
+import ItemContainer, { getInventoryScale } from "../components/item-container"
 import ItemsContainer from "../components/items-container"
 import LoadingManager from "../components/loading-manager"
 import MinigameManager from "../components/minigame-manager"
@@ -199,7 +199,7 @@ export default class GameScene extends Scene {
     const displayScaleY = this.scale.displayScale.y || 1
     this.itemsContainer.y = Math.ceil(
       (hudBottomInsideCanvas + MOBILE_INVENTORY_GAP_PX) * displayScaleY +
-        INVENTORY_ITEM_RADIUS
+        INVENTORY_ITEM_RADIUS * getInventoryScale(null)
     )
   }
 

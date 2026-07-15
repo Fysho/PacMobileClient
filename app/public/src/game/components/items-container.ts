@@ -16,7 +16,7 @@ import { isIn } from "../../../../utils/array"
 import { schemaValues } from "../../../../utils/schemas"
 import { DEPTH } from "../depths"
 import type GameScene from "../scenes/game-scene"
-import ItemContainer from "./item-container"
+import ItemContainer, { getInventoryScale } from "./item-container"
 
 export default class ItemsContainer extends GameObjects.Container {
   scene: GameScene
@@ -44,7 +44,8 @@ export default class ItemsContainer extends GameObjects.Container {
   render(inventory: SetSchema<Item> | ArraySchema<Item>) {
     this.removeAll(true)
 
-    const itemSize = this.pokemonId === null ? 70 : 25
+    const itemSize =
+      this.pokemonId === null ? 70 * getInventoryScale(this.pokemonId) : 25
     const ITEMS_PER_COLUMN = 6
     const items = schemaValues(inventory)
 

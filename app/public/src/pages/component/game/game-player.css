@@ -75,4 +75,21 @@
   #game-players .game-player .life-text {
     font-size: clamp(0.65rem, 2.5dvh, 0.8rem);
   }
+
+  .react-tooltip.game-player-detail-tooltip {
+    position: fixed !important;
+    top: 50dvh !important;
+    right: auto !important;
+    bottom: auto !important;
+    left: 50vw !important;
+    width: max-content;
+    max-width: calc(100vw - var(--mobile-player-sidebar-width) - 24px);
+    max-height: calc(100dvh - 32px);
+    overflow: auto;
+    transform: translate(-50%, -50%) !important;
+  }
+
+  .react-tooltip.game-player-detail-tooltip > [class*="arrow"] {
+    display: none;
+  }
 }

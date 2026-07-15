@@ -137,6 +137,7 @@
     left: 0;
     right: var(--mobile-player-sidebar-width);
     width: auto;
+    height: calc(40px + env(safe-area-inset-top));
     min-width: 0;
     max-width: none;
     box-sizing: border-box;
@@ -147,12 +148,8 @@
     overflow: hidden;
     border: 0;
     border-radius: 0;
-    background-color: rgba(27, 33, 48, 0.42);
-    background-color: color-mix(
-      in srgb,
-      var(--color-bg-primary) 42%,
-      transparent
-    );
+    background-color: rgba(27, 33, 48, 0.36);
+    background-color: var(--mobile-hud-background);
     -webkit-backdrop-filter: blur(6px);
     backdrop-filter: blur(6px);
     font-size: 0.75rem;

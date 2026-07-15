@@ -75,7 +75,7 @@ export default function GamePokemonPortrait(props: {
   const touchTooltipTimer = useRef<number | null>(null)
   const touchPointerId = useRef<number | null>(null)
   const touchLongPress = useRef(false)
-  const suppressTouchClickUntil = useRef(0)
+  const suppressTouchClick = useRef(false)
   const [touchTooltipControlled, setTouchTooltipControlled] = useState(false)
   const [touchTooltipOpen, setTouchTooltipOpen] = useState(false)
 
@@ -187,7 +187,7 @@ export default function GamePokemonPortrait(props: {
       touchTooltipTimer.current = null
     }
     if (suppressClick && touchLongPress.current) {
-      suppressTouchClickUntil.current = Date.now() + 500
+      suppressTouchClick.current = true
     }
     touchLongPress.current = false
     touchPointerId.current = null
@@ -208,12 +208,13 @@ export default function GamePokemonPortrait(props: {
       }}
       onPointerDown={(event) => {
         if (
-          props.origin !== "shop" ||
+          (props.origin !== "shop" && props.origin !== "proposition") ||
           event.pointerType === "mouse" ||
           !event.isPrimary
         ) {
           return
         }
+        suppressTouchClick.current = false
 
         if (touchTooltipTimer.current !== null) {
           window.clearTimeout(touchTooltipTimer.current)
@@ -240,7 +241,8 @@ export default function GamePokemonPortrait(props: {
       onPointerCancel={(event) => stopTouchTooltip(event, false)}
       onPointerLeave={(event) => stopTouchTooltip(event, true)}
       onClick={(e) => {
-        if (Date.now() < suppressTouchClickUntil.current) {
+        if (suppressTouchClick.current) {
+          suppressTouchClick.current = false
           e.preventDefault()
           e.stopPropagation()
           return

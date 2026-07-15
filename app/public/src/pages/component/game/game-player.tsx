@@ -1,3 +1,4 @@
+import { type PointerEvent, useEffect, useRef, useState } from "react"
 import { CircularProgressbarWithChildren } from "react-circular-progressbar"
 import { Tooltip } from "react-tooltip"
 
@@ -20,6 +21,44 @@ export default function GamePlayer(props: {
     (state) => state.game.playerIdSpectated
   )
   const connectedPlayerId = useAppSelector((state) => state.network.uid)
+  const touchTooltipTimer = useRef<number | null>(null)
+  const touchPointerId = useRef<number | null>(null)
+  const touchLongPress = useRef(false)
+  const suppressTouchClick = useRef(false)
+  const [touchTooltipControlled, setTouchTooltipControlled] = useState(false)
+  const [touchTooltipOpen, setTouchTooltipOpen] = useState(false)
+
+  useEffect(
+    () => () => {
+      if (touchTooltipTimer.current !== null) {
+        window.clearTimeout(touchTooltipTimer.current)
+      }
+    },
+    []
+  )
+
+  const stopTouchTooltip = (
+    event: PointerEvent<HTMLDivElement>,
+    suppressClick: boolean
+  ) => {
+    if (
+      event.pointerType === "mouse" ||
+      touchPointerId.current !== event.pointerId
+    ) {
+      return
+    }
+
+    if (touchTooltipTimer.current !== null) {
+      window.clearTimeout(touchTooltipTimer.current)
+      touchTooltipTimer.current = null
+    }
+    if (suppressClick && touchLongPress.current) {
+      suppressTouchClick.current = true
+    }
+    touchLongPress.current = false
+    touchPointerId.current = null
+    setTouchTooltipOpen(false)
+  }
 
   function playerClick() {
     if (spectatedPlayerId !== props.player.id) {
@@ -40,7 +79,45 @@ export default function GamePlayer(props: {
           self: connectedPlayerId === props.player.id,
           dead: props.player.life <= 0
         })}
-        onClick={playerClick}
+        onPointerDown={(event) => {
+          if (event.pointerType === "mouse" || !event.isPrimary) {
+            return
+          }
+
+          suppressTouchClick.current = false
+          if (touchTooltipTimer.current !== null) {
+            window.clearTimeout(touchTooltipTimer.current)
+          }
+          setTouchTooltipControlled(true)
+          setTouchTooltipOpen(false)
+          touchLongPress.current = false
+          touchPointerId.current = event.pointerId
+          event.currentTarget.setPointerCapture?.(event.pointerId)
+          touchTooltipTimer.current = window.setTimeout(() => {
+            if (touchPointerId.current === event.pointerId) {
+              touchLongPress.current = true
+              setTouchTooltipOpen(true)
+            }
+            touchTooltipTimer.current = null
+          }, 350)
+        }}
+        onPointerEnter={(event) => {
+          if (event.pointerType === "mouse") {
+            setTouchTooltipControlled(false)
+          }
+        }}
+        onPointerUp={(event) => stopTouchTooltip(event, true)}
+        onPointerCancel={(event) => stopTouchTooltip(event, false)}
+        onPointerLeave={(event) => stopTouchTooltip(event, true)}
+        onClick={(event) => {
+          if (suppressTouchClick.current) {
+            suppressTouchClick.current = false
+            event.preventDefault()
+            event.stopPropagation()
+            return
+          }
+          playerClick()
+        }}
         data-tooltip-id={"detail-" + props.player.id}
       >
         <CircularProgressbarWithChildren value={props.player.life} />
@@ -48,10 +125,12 @@ export default function GamePlayer(props: {
       </div>
       <Tooltip
         id={"detail-" + props.player.id}
-        className="custom-theme-tooltip"
+        className="custom-theme-tooltip game-player-detail-tooltip"
         place="left"
         data-tooltip-offset={{ left: 30, bottom: props.index === 0 ? 50 : 0 }}
         style={{ zIndex: DEPTH.TOOLTIP }}
+        positionStrategy="fixed"
+        isOpen={touchTooltipControlled ? touchTooltipOpen : undefined}
       >
         <GamePlayerDetail player={props.player} />
       </Tooltip>

@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect, useRef, useState } from "react"
 import { Tooltip } from "react-tooltip"
 import { RarityColor } from "../../../../../config"
 import { getPkmWithCustom } from "../../../../../models/colyseus-models/pokemon-customs"
@@ -24,6 +24,46 @@ export default function GamePokemonDuoPortrait(props: {
   const duoCustom = duo.map((p) =>
     getPkmWithCustom(p.index, spectatedPlayer?.pokemonCustoms)
   )
+  const touchTooltipTimer = useRef<number | null>(null)
+  const touchPointerId = useRef<number | null>(null)
+  const touchLongPress = useRef(false)
+  const suppressTouchClick = useRef(false)
+  const [touchTooltipControlled, setTouchTooltipControlled] = useState(false)
+  const [touchTooltipIndex, setTouchTooltipIndex] = useState<number | null>(
+    null
+  )
+
+  useEffect(
+    () => () => {
+      if (touchTooltipTimer.current !== null) {
+        window.clearTimeout(touchTooltipTimer.current)
+      }
+    },
+    []
+  )
+
+  const stopTouchTooltip = (
+    event: React.PointerEvent<HTMLDivElement>,
+    suppressClick: boolean
+  ) => {
+    if (
+      event.pointerType === "mouse" ||
+      touchPointerId.current !== event.pointerId
+    ) {
+      return
+    }
+
+    if (touchTooltipTimer.current !== null) {
+      window.clearTimeout(touchTooltipTimer.current)
+      touchTooltipTimer.current = null
+    }
+    if (suppressClick && touchLongPress.current) {
+      suppressTouchClick.current = true
+    }
+    touchLongPress.current = false
+    touchPointerId.current = null
+    setTouchTooltipIndex(null)
+  }
 
   return (
     <div
@@ -35,7 +75,15 @@ export default function GamePokemonDuoPortrait(props: {
         backgroundColor: rarityColor,
         borderColor: rarityColor
       }}
-      onClick={props.click}
+      onClick={(event) => {
+        if (suppressTouchClick.current) {
+          suppressTouchClick.current = false
+          event.preventDefault()
+          event.stopPropagation()
+          return
+        }
+        props.click?.(event)
+      }}
     >
       {duo.map((p, i) => (
         <React.Fragment key={"duo-" + i}>
@@ -48,11 +96,44 @@ export default function GamePokemonDuoPortrait(props: {
             style={{
               backgroundImage: `url("${getCachedPortrait(p.index, spectatedPlayer?.pokemonCustoms)}")`
             }}
+            onPointerDown={(event) => {
+              if (event.pointerType === "mouse" || !event.isPrimary) {
+                return
+              }
+              suppressTouchClick.current = false
+
+              if (touchTooltipTimer.current !== null) {
+                window.clearTimeout(touchTooltipTimer.current)
+              }
+              setTouchTooltipControlled(true)
+              setTouchTooltipIndex(null)
+              touchLongPress.current = false
+              touchPointerId.current = event.pointerId
+              event.currentTarget.setPointerCapture?.(event.pointerId)
+              touchTooltipTimer.current = window.setTimeout(() => {
+                if (touchPointerId.current === event.pointerId) {
+                  touchLongPress.current = true
+                  setTouchTooltipIndex(i)
+                }
+                touchTooltipTimer.current = null
+              }, 350)
+            }}
+            onPointerEnter={(event) => {
+              if (event.pointerType === "mouse") {
+                setTouchTooltipControlled(false)
+              }
+            }}
+            onPointerUp={(event) => stopTouchTooltip(event, true)}
+            onPointerCancel={(event) => stopTouchTooltip(event, false)}
+            onPointerLeave={(event) => stopTouchTooltip(event, true)}
           ></div>
           <Tooltip
             id={`tooltip-${props.origin}-${props.index}-${p.index}`}
             className="custom-theme-tooltip game-pokemon-detail-tooltip"
             place="bottom"
+            isOpen={
+              touchTooltipControlled ? touchTooltipIndex === i : undefined
+            }
           >
             <GamePokemonDetail
               pokemon={p.name}

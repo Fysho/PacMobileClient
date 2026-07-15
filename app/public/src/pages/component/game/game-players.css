@@ -25,12 +25,8 @@
       2px;
     overflow: hidden;
     border-left: 1px solid rgba(255, 255, 255, 0.24);
-    background-color: rgba(27, 33, 48, 0.52);
-    background-color: color-mix(
-      in srgb,
-      var(--color-bg-primary) 52%,
-      transparent
-    );
+    background-color: rgba(27, 33, 48, 0.36);
+    background-color: var(--mobile-hud-background);
     -webkit-backdrop-filter: blur(6px);
     backdrop-filter: blur(6px);
   }
