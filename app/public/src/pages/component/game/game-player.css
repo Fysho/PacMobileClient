@@ -61,3 +61,18 @@
 .game-player.spectated .life-text {
   margin-top: calc(-0.2em + 0.65vh);
 }
+
+@media (hover: none) and (pointer: coarse) {
+  #game-players .game-player {
+    position: relative;
+    top: auto !important;
+    right: auto;
+    width: clamp(38px, 10.5dvh, 44px);
+    height: clamp(38px, 10.5dvh, 44px);
+    pointer-events: auto;
+  }
+
+  #game-players .game-player .life-text {
+    font-size: clamp(0.65rem, 2.5dvh, 0.8rem);
+  }
+}

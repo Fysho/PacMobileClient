@@ -141,13 +141,49 @@ p:last-child {
 }
 
 @media (hover: none) and (pointer: coarse) {
+  html,
+  body,
+  #root {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #root :where(button, a, [role="button"], .clickable, [data-tooltip-id]) {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #root
+    :where(
+      input,
+      textarea,
+      select,
+      [contenteditable="true"],
+      [role="textbox"]
+    ) {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
   #root #game-wrapper {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  #root #game-wrapper {
+    --mobile-player-sidebar-width: calc(
+      clamp(44px, 6vw, 56px) +
+      env(safe-area-inset-right)
+    );
     left: 0;
     width: 100vw;
   }
 
   #root #game {
-    width: 100vw;
+    width: calc(100vw - var(--mobile-player-sidebar-width));
   }
 }
 

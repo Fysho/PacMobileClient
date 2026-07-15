@@ -135,8 +135,8 @@
   #game-stage-info.my-container {
     top: 0;
     left: 0;
-    width: 100%;
-    height: calc(40px + env(safe-area-inset-top));
+    right: var(--mobile-player-sidebar-width);
+    width: auto;
     min-width: 0;
     max-width: none;
     box-sizing: border-box;

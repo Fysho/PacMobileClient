@@ -1,5 +1,5 @@
 import type React from "react"
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Tooltip } from "react-tooltip"
 import { RarityColor } from "../../../../../config"
 import { EvolutionManager } from "../../../../../core/evolution-logic/evolution-manager"
@@ -72,6 +72,12 @@ export default function GamePokemonPortrait(props: {
 
   const [count, setCount] = useState(0)
   const [countEvol, setCountEvol] = useState(0)
+  const touchTooltipTimer = useRef<number | null>(null)
+  const touchPointerId = useRef<number | null>(null)
+  const touchLongPress = useRef(false)
+  const suppressTouchClickUntil = useRef(0)
+  const [touchTooltipControlled, setTouchTooltipControlled] = useState(false)
+  const [touchTooltipOpen, setTouchTooltipOpen] = useState(false)
 
   // recount where board size or pokemon on this shop cell changes
   useEffect(() => {
@@ -97,6 +103,15 @@ export default function GamePokemonPortrait(props: {
     setCount(_count)
     setCountEvol(_countEvol)
   }, [board, board?.size, props.pokemon, pokemon, isOnAnotherBoard])
+
+  useEffect(
+    () => () => {
+      if (touchTooltipTimer.current !== null) {
+        window.clearTimeout(touchTooltipTimer.current)
+      }
+    },
+    []
+  )
 
   if (!props.pokemon || !pokemon) {
     return <div className="game-pokemon-portrait my-box empty" />
@@ -156,6 +171,29 @@ export default function GamePokemonPortrait(props: {
 
   const canBuy = spectatedPlayer?.alive && spectatedPlayer?.money >= cost
 
+  const stopTouchTooltip = (
+    event: React.PointerEvent<HTMLDivElement>,
+    suppressClick: boolean
+  ) => {
+    if (
+      event.pointerType === "mouse" ||
+      touchPointerId.current !== event.pointerId
+    ) {
+      return
+    }
+
+    if (touchTooltipTimer.current !== null) {
+      window.clearTimeout(touchTooltipTimer.current)
+      touchTooltipTimer.current = null
+    }
+    if (suppressClick && touchLongPress.current) {
+      suppressTouchClickUntil.current = Date.now() + 500
+    }
+    touchLongPress.current = false
+    touchPointerId.current = null
+    setTouchTooltipOpen(false)
+  }
+
   return (
     <div
       className={cc("my-box", "clickable", "game-pokemon-portrait", {
@@ -168,7 +206,45 @@ export default function GamePokemonPortrait(props: {
         borderColor: rarityColor,
         backgroundImage: `url("${getCachedPortrait(pokemonInPortrait.index, customs)}")`
       }}
+      onPointerDown={(event) => {
+        if (
+          props.origin !== "shop" ||
+          event.pointerType === "mouse" ||
+          !event.isPrimary
+        ) {
+          return
+        }
+
+        if (touchTooltipTimer.current !== null) {
+          window.clearTimeout(touchTooltipTimer.current)
+        }
+        setTouchTooltipControlled(true)
+        setTouchTooltipOpen(false)
+        touchLongPress.current = false
+        touchPointerId.current = event.pointerId
+        event.currentTarget.setPointerCapture?.(event.pointerId)
+        touchTooltipTimer.current = window.setTimeout(() => {
+          if (touchPointerId.current === event.pointerId) {
+            touchLongPress.current = true
+            setTouchTooltipOpen(true)
+          }
+          touchTooltipTimer.current = null
+        }, 350)
+      }}
+      onPointerEnter={(event) => {
+        if (event.pointerType === "mouse") {
+          setTouchTooltipControlled(false)
+        }
+      }}
+      onPointerUp={(event) => stopTouchTooltip(event, true)}
+      onPointerCancel={(event) => stopTouchTooltip(event, false)}
+      onPointerLeave={(event) => stopTouchTooltip(event, true)}
       onClick={(e) => {
+        if (Date.now() < suppressTouchClickUntil.current) {
+          e.preventDefault()
+          e.stopPropagation()
+          return
+        }
         if (canBuy && props.click) props.click(e)
       }}
       onMouseEnter={props.onMouseEnter}
@@ -179,6 +255,7 @@ export default function GamePokemonPortrait(props: {
         id={`tooltip-${props.origin}-${props.index}`}
         className="custom-theme-tooltip game-pokemon-detail-tooltip"
         place="top"
+        isOpen={touchTooltipControlled ? touchTooltipOpen : undefined}
       >
         <GamePokemonDetail
           key={pokemonInPortrait.id}

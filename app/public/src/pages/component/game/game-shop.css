@@ -361,7 +361,7 @@
 @media (hover: none) and (pointer: coarse) {
   #game-wrapper .game-shop.my-container {
     left: 0;
-    right: 0;
+    right: var(--mobile-player-sidebar-width);
     bottom: 0;
     gap: 2px;
     padding: 2px max(2px, env(safe-area-inset-right))

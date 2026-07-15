@@ -12,6 +12,8 @@ export default function Synergies(props: {
   tooltipPortal: boolean
 }) {
   const [hoveredSynergy, setHoveredSynergy] = useState<Synergy | null>(null)
+  const [touchTooltipControlled, setTouchTooltipControlled] = useState(false)
+  const [touchTooltipOpen, setTouchTooltipOpen] = useState(false)
   const synergies = Object.keys(Synergy)
     .sort((a, b) => {
       const fa = props.synergies.find((e) => e[0] == a)
@@ -41,6 +43,7 @@ export default function Synergies(props: {
       place="right-start"
       delayShow={100}
       delayHide={0}
+      isOpen={touchTooltipControlled ? touchTooltipOpen : undefined}
     >
       {hoveredSynergy && (
         <SynergyDetailComponent
@@ -61,8 +64,20 @@ export default function Synergies(props: {
             type={type as Synergy}
             value={s[1]}
             index={index}
-            onMouseEnter={() => setHoveredSynergy(type as Synergy)}
-            onMouseLeave={() => setHoveredSynergy(null)}
+            onHoverStart={() => {
+              setTouchTooltipControlled(false)
+              setHoveredSynergy(type as Synergy)
+            }}
+            onHoverEnd={() => setHoveredSynergy(null)}
+            onPressStart={() => {
+              setTouchTooltipControlled(true)
+              setHoveredSynergy(type as Synergy)
+              setTouchTooltipOpen(true)
+            }}
+            onPressEnd={() => {
+              setTouchTooltipOpen(false)
+              setHoveredSynergy(null)
+            }}
           />
         )
       })}

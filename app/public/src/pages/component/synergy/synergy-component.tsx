@@ -9,8 +9,10 @@ export default function SynergyComponent(props: {
   type: Synergy
   value: number
   index: number
-  onMouseEnter: () => void
-  onMouseLeave: () => void
+  onHoverStart: () => void
+  onHoverEnd: () => void
+  onPressStart: () => void
+  onPressEnd: () => void
 }) {
   const { t } = useTranslation()
   const levelReached = SynergyTriggers[props.type]
@@ -66,13 +68,38 @@ export default function SynergyComponent(props: {
         cursor: "var(--cursor-hover)"
       }}
       data-tooltip-id="detail-synergy"
-      onMouseEnter={() => {
-        highlightSynergy(props.type)
-        props.onMouseEnter()
+      onPointerEnter={(event) => {
+        if (event.pointerType === "mouse") {
+          highlightSynergy(props.type)
+          props.onHoverStart()
+        }
       }}
-      onMouseLeave={() => {
+      onPointerLeave={(event) => {
         removeHighlightSynergy(props.type)
-        props.onMouseLeave()
+        if (event.pointerType === "mouse") {
+          props.onHoverEnd()
+        } else {
+          props.onPressEnd()
+        }
+      }}
+      onPointerDown={(event) => {
+        if (event.pointerType !== "mouse" && event.isPrimary) {
+          event.currentTarget.setPointerCapture?.(event.pointerId)
+          highlightSynergy(props.type)
+          props.onPressStart()
+        }
+      }}
+      onPointerUp={(event) => {
+        if (event.pointerType !== "mouse") {
+          removeHighlightSynergy(props.type)
+          props.onPressEnd()
+        }
+      }}
+      onPointerCancel={(event) => {
+        if (event.pointerType !== "mouse") {
+          removeHighlightSynergy(props.type)
+          props.onPressEnd()
+        }
       }}
     >
       <SynergyIcon type={props.type} />

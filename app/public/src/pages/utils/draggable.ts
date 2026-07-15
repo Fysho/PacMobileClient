@@ -2,6 +2,16 @@ import { type RefObject, useEffect, useRef, useState } from "react"
 import { clamp } from "../../../../utils/number"
 
 const SIDEBAR_WIDTH = 60
+const MOBILE_POINTER_QUERY = "(hover: none) and (pointer: coarse)"
+
+const getMinimumLeft = (margin: number) =>
+  window.matchMedia(MOBILE_POINTER_QUERY).matches
+    ? margin
+    : SIDEBAR_WIDTH + margin
+
+const getMaximumRight = () =>
+  document.getElementById("game")?.getBoundingClientRect().right ??
+  window.innerWidth
 
 interface Position {
   x: number
@@ -51,11 +61,11 @@ export function useDraggable(
         const dy = e.clientY - dragRef.current.startMouseY
         const proposedLeft = dragRef.current.startLeft + dx
         const proposedTop = dragRef.current.startTop + dy
-        const maxLeft = window.innerWidth - margin - dragRef.current.width
+        const maxLeft = getMaximumRight() - margin - dragRef.current.width
         const maxTop = window.innerHeight - margin - dragRef.current.height
         const clampedLeft = clamp(
           proposedLeft,
-          SIDEBAR_WIDTH + margin,
+          getMinimumLeft(margin),
           Math.max(margin, maxLeft)
         )
         const clampedTop = clamp(proposedTop, margin, Math.max(margin, maxTop))
@@ -97,14 +107,14 @@ export function useDraggable(
       const rect = containerRef.current?.getBoundingClientRect()
       const width = rect?.width ?? 0
       const height = rect?.height ?? 0
-      const maxLeft = window.innerWidth - margin - width
+      const maxLeft = getMaximumRight() - margin - width
       const maxTop = window.innerHeight - margin - height
       // Derive current rect left/top from current transform position
       const currentLeft = rect?.left ?? 0
       const currentTop = rect?.top ?? 0
       const clampedLeft = clamp(
         currentLeft,
-        SIDEBAR_WIDTH + margin,
+        getMinimumLeft(margin),
         Math.max(margin, maxLeft)
       )
       const clampedTop = clamp(currentTop, margin, Math.max(margin, maxTop))
