@@ -26,7 +26,7 @@ let hashIndexPlugin = {
       if (result.errors.length > 0) {
         console.log(`build ended with ${result.errors.length} errors`)
       }
-      updateHashedFilesInIndex()
+      emitClientShell()
     })
   }
 }
@@ -79,7 +79,7 @@ context({
     process.exit(1)
   })
 
-function updateHashedFilesInIndex() {
+function emitClientShell() {
   //update hash in index.html
   const fs = require("fs")
   const path = require("path")
@@ -87,6 +87,13 @@ function updateHashedFilesInIndex() {
   const distDir = path.join(__dirname, "app/public/dist/client")
   const htmlFile = path.join(__dirname, "app/views/index.html")
   const htmlOutputFile = path.join(distDir, "index.html")
+  const manifestFile = path.join(
+    __dirname,
+    "app/public/src/manifest.webmanifest"
+  )
+  const manifestOutputFile = path.join(distDir, "manifest.webmanifest")
+  const iconsDirectory = path.join(__dirname, "app/public/src/pwa-icons")
+  const iconsOutputDirectory = path.join(distDir, "icons")
 
   // Find the hashed script file
   const scriptFile = fs
@@ -113,6 +120,9 @@ function updateHashedFilesInIndex() {
 
     // Write the updated HTML back to the file
     fs.writeFileSync(htmlOutputFile, htmlContent, "utf8")
+    fs.copyFileSync(manifestFile, manifestOutputFile)
+    fs.rmSync(iconsOutputDirectory, { recursive: true, force: true })
+    fs.cpSync(iconsDirectory, iconsOutputDirectory, { recursive: true })
   } else {
     console.error("Hashed entry files not found.")
   }

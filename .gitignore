@@ -8,6 +8,8 @@ app/public/dist/server/**/*.js
 app/public/dist/server/**/*.js.map
 app/public/dist/**/*.d.ts
 app/public/dist/client/index.html
+app/public/dist/client/manifest.webmanifest
+app/public/dist/client/icons
 app/public/dist/client/index*.js
 app/public/dist/client/index*.js.map
 app/public/dist/client/index*.css
