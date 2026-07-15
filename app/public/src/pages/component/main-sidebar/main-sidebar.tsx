@@ -38,6 +38,9 @@ import "./main-sidebar.css"
 
 export type Page = "main_lobby" | "preparation" | "game"
 
+const MOBILE_POINTER_QUERY = "(hover: none) and (pointer: coarse)"
+export const MOBILE_SIDEBAR_CLOSE_EVENT = "pac-mobile-sidebar-close"
+
 interface MainSidebarProps {
   page: Page
   leave: () => void
@@ -55,6 +58,7 @@ export function MainSidebar(props: MainSidebarProps) {
     []
   )
   const sidebarRef = useRef<HTMLHtmlElement>(null)
+  const swipeStart = useRef<{ x: number; y: number } | null>(null)
 
   const { t } = useTranslation()
   const profile = useAppSelector((state) => state.network.profile)
@@ -67,7 +71,13 @@ export function MainSidebar(props: MainSidebarProps) {
 
   const numberOfBooster = profile?.booster ?? 0
 
+  const closeSidebar = useCallback(() => setCollapsed(true), [])
+
   useEffect(() => {
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+      return
+    }
+
     if (!sidebarRef.current) {
       return
     }
@@ -89,7 +99,91 @@ export function MainSidebar(props: MainSidebarProps) {
   }, [])
 
   useEffect(() => {
+    if (page !== "game") {
+      return
+    }
+
+    const handleCloseRequest = () => setCollapsed(true)
+    window.addEventListener(MOBILE_SIDEBAR_CLOSE_EVENT, handleCloseRequest)
+    return () =>
+      window.removeEventListener(MOBILE_SIDEBAR_CLOSE_EVENT, handleCloseRequest)
+  }, [page])
+
+  useEffect(() => {
+    if (page !== "game" || !window.matchMedia(MOBILE_POINTER_QUERY).matches) {
+      return
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const startedOnSidebar = sidebarRef.current?.contains(
+        event.target as Node
+      )
+      if (
+        event.pointerType === "touch" &&
+        ((collapsed && event.clientX <= 32) || (!collapsed && startedOnSidebar))
+      ) {
+        swipeStart.current = { x: event.clientX, y: event.clientY }
+      }
+    }
+    const handlePointerMove = (event: PointerEvent) => {
+      const start = swipeStart.current
+      if (!start) {
+        return
+      }
+
+      const deltaX = event.clientX - start.x
+      const deltaY = event.clientY - start.y
+      if (Math.abs(deltaY) > 24 && Math.abs(deltaY) > Math.abs(deltaX)) {
+        swipeStart.current = null
+      } else if (
+        collapsed &&
+        deltaX >= 56 &&
+        deltaX > Math.abs(deltaY) * 1.25
+      ) {
+        event.preventDefault()
+        swipeStart.current = null
+        setCollapsed(false)
+      } else if (
+        !collapsed &&
+        deltaX <= -56 &&
+        Math.abs(deltaX) > Math.abs(deltaY) * 1.25
+      ) {
+        event.preventDefault()
+        swipeStart.current = null
+        closeSidebar()
+      }
+    }
+    const clearSwipe = () => {
+      swipeStart.current = null
+    }
+
+    window.addEventListener("pointerdown", handlePointerDown)
+    window.addEventListener("pointermove", handlePointerMove, {
+      passive: false
+    })
+    window.addEventListener("pointerup", clearSwipe)
+    window.addEventListener("pointercancel", clearSwipe)
+    return () => {
+      window.removeEventListener("pointerdown", handlePointerDown)
+      window.removeEventListener("pointermove", handlePointerMove)
+      window.removeEventListener("pointerup", clearSwipe)
+      window.removeEventListener("pointercancel", clearSwipe)
+    }
+  }, [closeSidebar, collapsed, page])
+
+  useEffect(() => {
     const handleKeydown = (e: KeyboardEvent) => {
+      if (
+        e.key === "Escape" &&
+        page === "game" &&
+        !collapsed &&
+        window.matchMedia(MOBILE_POINTER_QUERY).matches
+      ) {
+        e.preventDefault()
+        closeSidebar()
+        return
+      }
+
       //if event occurs in an input, textarea or select, ignore it
       if (
         ["INPUT", "TEXTAREA", "SELECT", "OPTION"].includes(
@@ -122,7 +216,7 @@ export function MainSidebar(props: MainSidebarProps) {
     return () => {
       window.removeEventListener("keydown", handleKeydown)
     }
-  }, [preferences.keybindings, profileLevel])
+  }, [closeSidebar, collapsed, page, preferences.keybindings, profileLevel])
 
   const player = useAppSelector(selectConnectedPlayer)
   const playersAlive = useAppSelector(
@@ -139,271 +233,299 @@ export function MainSidebar(props: MainSidebarProps) {
   }
 
   return (
-    <Sidebar
-      collapsed={collapsed}
-      className="sidebar"
-      ref={sidebarRef}
-      backgroundColor="transparent"
-    >
-      <Menu>
-        <div className="sidebar-logo" onClick={() => setCollapsed(!collapsed)}>
-          <img src={`assets/ui/colyseus-icon.png`} />
-          <div>
-            <h1>Pokemon Auto Chess</h1>
-            <small>v{version}</small>
-          </div>
-        </div>
-
-        <NavLink
-          svg="meta"
-          onClick={() => window.open("/privacy-policy", "_blank")}
-        >
-          {t("policy")}
-        </NavLink>
-
-        <NavLink
-          svg="meta"
-          onClick={() => window.open("/terms-of-service", "_blank")}
-        >
-          {t("terms_of_service")}
-        </NavLink>
-
-        <NavLink
-          location="news"
-          svg="newspaper"
-          handleClick={(newModal) => {
-            changeModal(newModal)
-            if (isNewPatch) {
-              updateVersionChecked()
+    <>
+      {page === "game" && !collapsed && (
+        <button
+          type="button"
+          className="mobile-sidebar-backdrop"
+          aria-label={t("close")}
+          onClick={closeSidebar}
+        />
+      )}
+      <Sidebar
+        collapsed={collapsed}
+        className={`sidebar sidebar-${page}`}
+        ref={sidebarRef}
+        backgroundColor="transparent"
+      >
+        <Menu
+          onClick={(event) => {
+            if (
+              page === "game" &&
+              window.matchMedia(MOBILE_POINTER_QUERY).matches &&
+              (event.target as HTMLElement).closest(".menu-item")
+            ) {
+              closeSidebar()
             }
           }}
-          shimmer={isNewPatch}
         >
-          {t("patch_notes")}
-        </NavLink>
+          <div
+            className="sidebar-logo"
+            onClick={() => (collapsed ? setCollapsed(false) : closeSidebar())}
+          >
+            <img src={`assets/ui/colyseus-icon.png`} />
+            <div>
+              <h1>Pokemon Auto Chess</h1>
+              <small>v{version}</small>
+            </div>
+          </div>
 
-        {page === "main_lobby" && (
-          <NavLink location="profile" svg="profile" handleClick={changeModal}>
-            {t("profile.title")}
-          </NavLink>
-        )}
-
-        {page === "main_lobby" && profileLevel >= GADGETS.bag.levelRequired && (
           <NavLink
-            location="collection"
-            svg="collection"
-            className="blue"
+            svg="meta"
+            onClick={() => window.open("/privacy-policy", "_blank")}
+          >
+            {t("policy")}
+          </NavLink>
+
+          <NavLink
+            svg="meta"
+            onClick={() => window.open("/terms-of-service", "_blank")}
+          >
+            {t("terms_of_service")}
+          </NavLink>
+
+          <NavLink
+            location="news"
+            svg="newspaper"
+            handleClick={(newModal) => {
+              changeModal(newModal)
+              if (isNewPatch) {
+                updateVersionChecked()
+              }
+            }}
+            shimmer={isNewPatch}
+          >
+            {t("patch_notes")}
+          </NavLink>
+
+          {page === "main_lobby" && (
+            <NavLink location="profile" svg="profile" handleClick={changeModal}>
+              {t("profile.title")}
+            </NavLink>
+          )}
+
+          {page === "main_lobby" &&
+            profileLevel >= GADGETS.bag.levelRequired && (
+              <NavLink
+                location="collection"
+                svg="collection"
+                className="blue"
+                handleClick={changeModal}
+              >
+                {t("collection.title")}
+              </NavLink>
+            )}
+          {(page === "main_lobby" || page === "preparation") &&
+            profileLevel >= GADGETS.bag.levelRequired && (
+              <NavLink
+                location="booster"
+                svg="booster"
+                className="blue"
+                handleClick={changeModal}
+                shimmer={numberOfBooster > 0}
+              >
+                {t("boosters")}
+              </NavLink>
+            )}
+          <NavLink
+            location="wiki"
+            svg="wiki"
+            className="green"
             handleClick={changeModal}
           >
-            {t("collection.title")}
+            {t("wiki.title")}
           </NavLink>
-        )}
-        {(page === "main_lobby" || page === "preparation") &&
-          profileLevel >= GADGETS.bag.levelRequired && (
+          <NavLink
+            svg="meta"
+            className="green"
+            location="meta"
+            handleClick={changeModal}
+          >
+            {t("meta")}
+          </NavLink>
+
+          {profileLevel >= GADGETS.team_planner.levelRequired && (
             <NavLink
-              location="booster"
-              svg="booster"
-              className="blue"
-              handleClick={changeModal}
-              shimmer={numberOfBooster > 0}
-            >
-              {t("boosters")}
-            </NavLink>
-          )}
-        <NavLink
-          location="wiki"
-          svg="wiki"
-          className="green"
-          handleClick={changeModal}
-        >
-          {t("wiki.title")}
-        </NavLink>
-        <NavLink
-          svg="meta"
-          className="green"
-          location="meta"
-          handleClick={changeModal}
-        >
-          {t("meta")}
-        </NavLink>
-
-        {profileLevel >= GADGETS.team_planner.levelRequired && (
-          <NavLink
-            svg="team-builder"
-            location="team-builder"
-            handleClick={changeModal}
-          >
-            {t("team_builder")}
-          </NavLink>
-        )}
-
-        {page !== "game" &&
-          ((!GADGETS.pokeguesser.disabled &&
-            profileLevel >= GADGETS.pokeguesser.levelRequired) ||
-            profile?.role === Role.ADMIN) && (
-            <NavLink
-              svg="pokeguesser"
-              location="pokeguesser"
-              handleClick={changeModal}
-            >
-              {t("gadget.pokeguesser")}
-            </NavLink>
-          )}
-
-        {((!GADGETS.synergy_wheel.disabled &&
-          profileLevel >= GADGETS.synergy_wheel.levelRequired) ||
-          profile?.role === Role.ADMIN) && (
-          <NavLink
-            svg="synergy-wheel"
-            location="synergy-wheel"
-            handleClick={changeModal}
-          >
-            {t("gadget.synergy_wheel")}
-          </NavLink>
-        )}
-
-        {page !== "game" &&
-          ((!GADGETS.bot_builder.disabled &&
-            profileLevel >= GADGETS.bot_builder.levelRequired) ||
-            profile?.role === Role.ADMIN) && (
-            <NavLink svg="bot" onClick={() => navigate("/bot-builder")}>
-              {t("bot_builder")}
-            </NavLink>
-          )}
-
-        {page !== "game" &&
-          ((!GADGETS.gameboy.disabled &&
-            profileLevel >= GADGETS.gameboy.levelRequired) ||
-            profile?.role === Role.ADMIN) && (
-            <NavLink svg="gameboy" onClick={() => navigate("/gameboy")}>
-              {t("gadget.gameboy")}
-            </NavLink>
-          )}
-
-        {((!GADGETS.tier_list_maker.disabled &&
-          profileLevel >= GADGETS.tier_list_maker.levelRequired) ||
-          profile?.role === Role.ADMIN) && (
-          <NavLink
-            svg="tier-list"
-            location="tier-list"
-            handleClick={changeModal}
-          >
-            {t("gadget.tier_list_maker")}
-          </NavLink>
-        )}
-
-        {((!GADGETS.sprite_tracker.disabled &&
-          profileLevel >= GADGETS.sprite_tracker.levelRequired) ||
-          profile?.role === Role.ADMIN) && (
-          <NavLink
-            svg="pokemon-sprite"
-            location="sprite-tracker"
-            handleClick={changeModal}
-          >
-            {t("gadget.sprite_tracker")}
-          </NavLink>
-        )}
-
-        {page !== "game" &&
-          (profile?.role === Role.MODERATOR ||
-            profile?.role === Role.ADMIN) && (
-            <NavLink
-              svg="hammer"
-              location="moderation"
+              svg="team-builder"
+              location="team-builder"
               handleClick={changeModal}
             >
-              Moderation
+              {t("team_builder")}
             </NavLink>
           )}
 
-        {page !== "game" && profile?.role === Role.ADMIN && (
-          <>
-            <NavLink svg="admin" location="admin" handleClick={changeModal}>
-              {t("admin_panel.title")}
+          {page !== "game" &&
+            ((!GADGETS.pokeguesser.disabled &&
+              profileLevel >= GADGETS.pokeguesser.levelRequired) ||
+              profile?.role === Role.ADMIN) && (
+              <NavLink
+                svg="pokeguesser"
+                location="pokeguesser"
+                handleClick={changeModal}
+              >
+                {t("gadget.pokeguesser")}
+              </NavLink>
+            )}
+
+          {((!GADGETS.synergy_wheel.disabled &&
+            profileLevel >= GADGETS.synergy_wheel.levelRequired) ||
+            profile?.role === Role.ADMIN) && (
+            <NavLink
+              svg="synergy-wheel"
+              location="synergy-wheel"
+              handleClick={changeModal}
+            >
+              {t("gadget.synergy_wheel")}
             </NavLink>
+          )}
+
+          {page !== "game" &&
+            ((!GADGETS.bot_builder.disabled &&
+              profileLevel >= GADGETS.bot_builder.levelRequired) ||
+              profile?.role === Role.ADMIN) && (
+              <NavLink svg="bot" onClick={() => navigate("/bot-builder")}>
+                {t("bot_builder")}
+              </NavLink>
+            )}
+
+          {page !== "game" &&
+            ((!GADGETS.gameboy.disabled &&
+              profileLevel >= GADGETS.gameboy.levelRequired) ||
+              profile?.role === Role.ADMIN) && (
+              <NavLink svg="gameboy" onClick={() => navigate("/gameboy")}>
+                {t("gadget.gameboy")}
+              </NavLink>
+            )}
+
+          {((!GADGETS.tier_list_maker.disabled &&
+            profileLevel >= GADGETS.tier_list_maker.levelRequired) ||
+            profile?.role === Role.ADMIN) && (
+            <NavLink
+              svg="tier-list"
+              location="tier-list"
+              handleClick={changeModal}
+            >
+              {t("gadget.tier_list_maker")}
+            </NavLink>
+          )}
+
+          {((!GADGETS.sprite_tracker.disabled &&
+            profileLevel >= GADGETS.sprite_tracker.levelRequired) ||
+            profile?.role === Role.ADMIN) && (
             <NavLink
               svg="pokemon-sprite"
-              onClick={() => navigate("/sprite-viewer")}
+              location="sprite-tracker"
+              handleClick={changeModal}
             >
-              Sprite Viewer
+              {t("gadget.sprite_tracker")}
             </NavLink>
-            <NavLink svg="map" onClick={() => navigate("/map-viewer")}>
-              Map Viewer
-            </NavLink>
-          </>
-        )}
+          )}
 
-        {page === "game" && profileLevel >= GADGETS.jukebox.levelRequired && (
-          <NavLink
-            svg="compact-disc"
-            location="jukebox"
-            handleClick={changeModal}
-          >
-            {t("gadget.jukebox")}
-          </NavLink>
-        )}
+          {page !== "game" &&
+            (profile?.role === Role.MODERATOR ||
+              profile?.role === Role.ADMIN) && (
+              <NavLink
+                svg="hammer"
+                location="moderation"
+                handleClick={changeModal}
+              >
+                Moderation
+              </NavLink>
+            )}
 
-        <NavLink svg="options" location="options" handleClick={changeModal}>
-          {t("options.title")}
-        </NavLink>
+          {page !== "game" && profile?.role === Role.ADMIN && (
+            <>
+              <NavLink svg="admin" location="admin" handleClick={changeModal}>
+                {t("admin_panel.title")}
+              </NavLink>
+              <NavLink
+                svg="pokemon-sprite"
+                onClick={() => navigate("/sprite-viewer")}
+              >
+                Sprite Viewer
+              </NavLink>
+              <NavLink svg="map" onClick={() => navigate("/map-viewer")}>
+                Map Viewer
+              </NavLink>
+            </>
+          )}
 
-        {page === "game" && document.fullscreenEnabled && (
-          <NavLink svg="fullscreen" onClick={toggleFullScreen}>
-            {t("toggle_fullscreen")}
-          </NavLink>
-        )}
-
-        <div className="spacer"></div>
-
-        {page !== "game" && (
-          <NavLink
-            svg="players"
-            className="community-servers"
-            location="servers"
-            handleClick={changeModal}
-          >
-            {t("servers_list.title")}
-          </NavLink>
-        )}
-
-        {page !== "game" && (
-          <NavLink
-            svg="discord"
-            className="discord"
-            onClick={() => window.open(process.env.DISCORD_SERVER, "_blank")}
-          >
-            Discord
-          </NavLink>
-        )}
-
-        <NavLink svg="exit-door" className="red logout" onClick={onClickLeave}>
-          {leaveLabel}
-        </NavLink>
-      </Menu>
-
-      <Modals modal={modal} setModal={setModal} page={page} />
-      <Modal
-        show={showSurrenderConfirm}
-        header={t("game-surrender-modal-title")}
-        body={t("game-surrender-modal-body")}
-        onClose={() => setShowSurrenderConfirm(false)}
-        footer={
-          <>
-            <button className="bubbly green" onClick={leave}>
-              {t("yes")}
-            </button>
-            <button
-              className="bubbly red"
-              onClick={() => {
-                setShowSurrenderConfirm(false)
-              }}
+          {page === "game" && profileLevel >= GADGETS.jukebox.levelRequired && (
+            <NavLink
+              svg="compact-disc"
+              location="jukebox"
+              handleClick={changeModal}
             >
-              {t("no")}
-            </button>
-          </>
-        }
-      ></Modal>
-    </Sidebar>
+              {t("gadget.jukebox")}
+            </NavLink>
+          )}
+
+          <NavLink svg="options" location="options" handleClick={changeModal}>
+            {t("options.title")}
+          </NavLink>
+
+          {page === "game" && document.fullscreenEnabled && (
+            <NavLink svg="fullscreen" onClick={toggleFullScreen}>
+              {t("toggle_fullscreen")}
+            </NavLink>
+          )}
+
+          <div className="spacer"></div>
+
+          {page !== "game" && (
+            <NavLink
+              svg="players"
+              className="community-servers"
+              location="servers"
+              handleClick={changeModal}
+            >
+              {t("servers_list.title")}
+            </NavLink>
+          )}
+
+          {page !== "game" && (
+            <NavLink
+              svg="discord"
+              className="discord"
+              onClick={() => window.open(process.env.DISCORD_SERVER, "_blank")}
+            >
+              Discord
+            </NavLink>
+          )}
+
+          <NavLink
+            svg="exit-door"
+            className="red logout"
+            onClick={onClickLeave}
+          >
+            {leaveLabel}
+          </NavLink>
+        </Menu>
+
+        <Modals modal={modal} setModal={setModal} page={page} />
+        <Modal
+          show={showSurrenderConfirm}
+          header={t("game-surrender-modal-title")}
+          body={t("game-surrender-modal-body")}
+          onClose={() => setShowSurrenderConfirm(false)}
+          footer={
+            <>
+              <button className="bubbly green" onClick={leave}>
+                {t("yes")}
+              </button>
+              <button
+                className="bubbly red"
+                onClick={() => {
+                  setShowSurrenderConfirm(false)
+                }}
+              >
+                {t("no")}
+              </button>
+            </>
+          }
+        ></Modal>
+      </Sidebar>
+    </>
   )
 }
 

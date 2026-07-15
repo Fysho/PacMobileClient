@@ -130,6 +130,8 @@ export default class PokemonSprite extends DraggableObject {
   floatingTween?: Phaser.Tweens.Tween
   troopers?: PokemonSprite[]
   isTeleporting: boolean = false
+  private longPressTimer?: Phaser.Time.TimerEvent
+  private detailOpenedByLongPress: boolean = false
 
   constructor(
     scene: GameScene | DebugScene,
@@ -378,6 +380,7 @@ export default class PokemonSprite extends DraggableObject {
   }
 
   destroy(fromScene?: boolean | undefined): void {
+    this.cancelLongPress()
     const g = <GameScene>this.scene
     super.destroy(fromScene)
     this.closeDetail()
@@ -389,6 +392,7 @@ export default class PokemonSprite extends DraggableObject {
   }
 
   closeDetail() {
+    this.detailOpenedByLongPress = false
     if (this.detail) {
       this.detail.dom.remove()
       this.remove(this.detail, true)
@@ -418,11 +422,17 @@ export default class PokemonSprite extends DraggableObject {
     this.scene.lastPokemonDetail = this
   }
 
+  cancelLongPress(): void {
+    this.longPressTimer?.remove(false)
+    this.longPressTimer = undefined
+  }
+
   onPointerDown(
     pointer: Phaser.Input.Pointer,
     event: Phaser.Types.Input.EventData
   ) {
     super.onPointerDown(pointer, event)
+    this.cancelLongPress()
     if (
       this.shouldShowTooltip &&
       !preference("showDetailsOnHover") &&
@@ -434,12 +444,34 @@ export default class PokemonSprite extends DraggableObject {
     } else {
       this.closeDetail()
     }
+    if (
+      this.shouldShowTooltip &&
+      pointer.wasTouch &&
+      pointer.leftButtonDown()
+    ) {
+      const startX = pointer.x
+      const startY = pointer.y
+      this.longPressTimer = this.scene.time.delayedCall(500, () => {
+        this.longPressTimer = undefined
+        const distance = Phaser.Math.Distance.Between(
+          startX,
+          startY,
+          pointer.x,
+          pointer.y
+        )
+        if (pointer.isDown && distance <= 16 && !this.detail) {
+          this.openDetail()
+          this.detailOpenedByLongPress = this.detail != null
+        }
+      })
+    }
     if (pointer.leftButtonDown() && !this.inBattle) {
       this.emoteAnimation()
     }
   }
 
   onPointerUp(): void {
+    this.cancelLongPress()
     super.onPointerUp()
     if (
       this.shouldShowTooltip &&
@@ -451,8 +483,13 @@ export default class PokemonSprite extends DraggableObject {
   }
 
   onPointerOut(): void {
+    this.cancelLongPress()
     super.onPointerOut()
-    if (this.shouldShowTooltip && preference("showDetailsOnHover")) {
+    if (
+      this.shouldShowTooltip &&
+      preference("showDetailsOnHover") &&
+      !this.detailOpenedByLongPress
+    ) {
       this.closeDetail()
     }
   }

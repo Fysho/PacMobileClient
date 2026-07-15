@@ -96,9 +96,13 @@ import GameSpectatePlayerInfo from "./component/game/game-spectate-player-info"
 import GameStageInfo from "./component/game/game-stage-info"
 import GameSynergies from "./component/game/game-synergies"
 import GameToasts from "./component/game/game-toasts"
-import { MainSidebar } from "./component/main-sidebar/main-sidebar"
+import {
+  MainSidebar,
+  MOBILE_SIDEBAR_CLOSE_EVENT
+} from "./component/main-sidebar/main-sidebar"
 import { ConnectionStatusNotification } from "./component/system/connection-status-notification"
 import { playMusic, preloadMusic } from "./utils/audio"
+import { enterFullScreen } from "./utils/fullscreen"
 import { LocalStoreKeys, localStore } from "./utils/store"
 import { transformEntityCoordinates } from "./utils/utils"
 
@@ -192,6 +196,25 @@ export default function Game() {
   const currentGameEvent = getCurrentGameEvent()
 
   const MAX_ATTEMPS_RECONNECT = 3
+  useEffect(() => {
+    if (
+      !loaded ||
+      !window.matchMedia("(hover: none) and (pointer: coarse)").matches ||
+      !document.fullscreenEnabled ||
+      document.fullscreenElement
+    ) {
+      return
+    }
+
+    const enterOnFirstTouch = (event: PointerEvent) => {
+      if (event.pointerType === "touch") {
+        void enterFullScreen()
+      }
+    }
+
+    window.addEventListener("pointerdown", enterOnFirstTouch, { once: true })
+    return () => window.removeEventListener("pointerdown", enterOnFirstTouch)
+  }, [loaded])
 
   const connectToGame = useCallback(
     async (attempts = 1) => {
@@ -347,6 +370,12 @@ export default function Game() {
     // create a history entry to prevent back button switching page immediately, and leave game properly instead
     window.history.pushState(null, "", window.location.href)
     const confirmLeave = () => {
+      if (document.querySelector(".mobile-sidebar-backdrop")) {
+        window.dispatchEvent(new Event(MOBILE_SIDEBAR_CLOSE_EVENT))
+        window.history.pushState(null, "", window.location.href)
+        return
+      }
+
       if (confirm("Do you want to leave game ?")) {
         leave()
       } else {

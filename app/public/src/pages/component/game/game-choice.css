@@ -16,6 +16,9 @@
   color: var(--color-fg-primary);
   text-align: center;
 }
+.game-choice-message-short {
+  display: none;
+}
 
 .game-choice-pokemons-list,
 .game-choice-items-list {
@@ -65,4 +68,19 @@
 .game-choice .choice-additional-item p {
   font-size: 80%;
   max-width: 240px;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .game-choice-message-long {
+    display: none;
+  }
+
+  .game-choice-message-short {
+    display: inline;
+  }
+
+  .game-choice .choice-additional-item p,
+  .game-choice .game-choice-items-list > .my-box > p {
+    display: none;
+  }
 }

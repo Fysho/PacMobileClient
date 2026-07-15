@@ -69,23 +69,31 @@ export default function GameChoice() {
   const choice = choices[0] // only display one choice at a time, the others will be displayed after the first one is picked
 
   let message: string | null = null
+  let mobileMessage: string | null = null
   if (choice.type === "addPick") {
     message = t("player_choices.choose_add_pick")
+    mobileMessage = t("additional_pick")
   } else if (choice.type === "starter") {
     message =
       specialGameRule === SpecialGameRule.FIRST_PARTNER
         ? t("player_choices.choose_first_partner")
         : t("player_choices.choose_starter")
+    mobileMessage = t("wiki.stages.starter_pick")
   } else if (choice.type === "mission_order") {
     message = t("player_choices.choose_mission_order")
+    mobileMessage = message
   } else if (choice.type === "unique") {
     message = t("player_choices.choose_unique")
+    mobileMessage = t("unique_pick")
   } else if (choice.type === "legendary") {
     message = t("player_choices.choose_legendary")
+    mobileMessage = t("wiki.stages.legendary_pick")
   } else if (choice.type === "item") {
     message = t("player_choices.choose_item")
+    mobileMessage = t("special_items")
   } else if (choice.type === "wand") {
     message = t("player_choices.choose_wand")
+    mobileMessage = t("wands")
   }
 
   return (
@@ -94,7 +102,14 @@ export default function GameChoice() {
         className="my-container"
         style={{ visibility: visible ? "visible" : "hidden" }}
       >
-        {message && <h2>{message}</h2>}
+        {message && (
+          <h2>
+            <span className="game-choice-message-long">{message}</span>
+            <span className="game-choice-message-short">
+              {mobileMessage ?? message}
+            </span>
+          </h2>
+        )}
 
         {choice.pokemons.length > 0 ? (
           <div className="game-choice-pokemons-list">

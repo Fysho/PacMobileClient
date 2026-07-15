@@ -215,3 +215,51 @@ aside.sidebar {
     opacity: 1;
   }
 }
+
+.mobile-sidebar-backdrop {
+  display: none;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  #root #game-wrapper::before {
+    content: "";
+    position: fixed;
+    top: 40%;
+    left: max(2px, env(safe-area-inset-left));
+    width: 3px;
+    height: 20%;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.3);
+    pointer-events: none;
+    z-index: 99;
+  }
+
+  .mobile-sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    z-index: 99;
+  }
+
+  #root #game-wrapper .sidebar-game {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    height: 100dvh;
+    transition: transform 180ms ease-out;
+  }
+
+  #root #game-wrapper .sidebar-game.ps-collapsed {
+    height: 100dvh;
+    transform: translateX(calc(-100% - 4px));
+    overflow: hidden;
+  }
+
+  #root #game-wrapper .sidebar-game:not(.ps-collapsed) {
+    transform: translateX(0);
+  }
+}

@@ -48,6 +48,11 @@ import WanderersManager from "../components/wanderers-manager"
 import WeatherManager from "../components/weather-manager"
 import { DEPTH } from "../depths"
 
+const MOBILE_POINTER_QUERY = "(hover: none) and (pointer: coarse)"
+const DEFAULT_INVENTORY_Y = 5 * 24 + 10
+const INVENTORY_ITEM_RADIUS = 30
+const MOBILE_INVENTORY_GAP_PX = 4
+
 export default class GameScene extends Scene {
   tilemaps: Map<DungeonPMDO, DesignTiled> = new Map<DungeonPMDO, DesignTiled>()
   room: Room<GameState> | undefined
@@ -146,6 +151,7 @@ export default class GameScene extends Scene {
         null,
         this.uid
       )
+      this.positionInventoryBelowTopHud()
       this.board = new BoardManager(
         this,
         player,
@@ -173,6 +179,28 @@ export default class GameScene extends Scene {
       }
       clearTitleNotificationIcon()
     }
+  }
+
+  positionInventoryBelowTopHud(): void {
+    if (!this.itemsContainer) {
+      return
+    }
+
+    if (!window.matchMedia(MOBILE_POINTER_QUERY).matches) {
+      this.itemsContainer.y = DEFAULT_INVENTORY_Y
+      return
+    }
+
+    const canvasTop = this.game.canvas.getBoundingClientRect().top
+    const topHudBottom =
+      document.getElementById("game-stage-info")?.getBoundingClientRect()
+        .bottom ?? 40
+    const hudBottomInsideCanvas = Math.max(0, topHudBottom - canvasTop)
+    const displayScaleY = this.scale.displayScale.y || 1
+    this.itemsContainer.y = Math.ceil(
+      (hudBottomInsideCanvas + MOBILE_INVENTORY_GAP_PX) * displayScaleY +
+        INVENTORY_ITEM_RADIUS
+    )
   }
 
   toggleTilesetAnimation(paused: boolean) {
@@ -525,6 +553,7 @@ export default class GameScene extends Scene {
       "dragstart",
       (pointer, gameObject: Phaser.GameObjects.GameObject) => {
         if (gameObject instanceof PokemonSprite) {
+          gameObject.cancelLongPress()
           this.pokemonDragged = gameObject
           this.pokemonDragged.setDepth(DEPTH.DRAGGED_POKEMON)
           this.dropSpots.forEach((spot) => {

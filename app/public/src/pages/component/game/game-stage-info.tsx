@@ -16,6 +16,7 @@ import { SynergyAssociatedToWeather } from "../../../../../types/enum/Weather"
 import { getAvatarSrc, getPortraitSrc } from "../../../../../utils/avatar"
 import { min } from "../../../../../utils/number"
 import { selectSpectatedPlayer, useAppSelector } from "../../../hooks"
+import { getGameScene } from "../../game"
 import { addIconsToDescription } from "../../utils/descriptions"
 import { cc } from "../../utils/jsx"
 import { GameModeIcon } from "../icons/game-mode-icon"
@@ -32,6 +33,28 @@ export default function GameStageInfo() {
   const spectatedPlayer = useAppSelector(selectSpectatedPlayer)
   const stageLevel = useAppSelector((state) => state.game.stageLevel)
   const gameMode = useAppSelector((state) => state.game.gameMode)
+
+  React.useEffect(() => {
+    if (!spectatedPlayer) {
+      return
+    }
+
+    const topHud = document.getElementById("game-stage-info")
+    const gameScene = getGameScene()
+    if (!topHud || !gameScene) {
+      return
+    }
+
+    const positionInventory = () => gameScene.positionInventoryBelowTopHud()
+    positionInventory()
+    const resizeObserver = new ResizeObserver(positionInventory)
+    resizeObserver.observe(topHud)
+    window.addEventListener("resize", positionInventory)
+    return () => {
+      resizeObserver.disconnect()
+      window.removeEventListener("resize", positionInventory)
+    }
+  }, [spectatedPlayer?.id])
 
   if (!spectatedPlayer) return null
 

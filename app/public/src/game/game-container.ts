@@ -293,7 +293,10 @@ class GameContainer {
       parent: this.div,
       pixelArt: true,
       scene: GameScene,
-      scale: { mode: Phaser.Scale.FIT },
+      scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH
+      },
       dom: {
         createContainer: true
       },
@@ -329,8 +332,8 @@ class GameContainer {
   }
 
   resize() {
-    const screenWidth = window.innerWidth - 60
-    const screenHeight = window.innerHeight
+    const screenWidth = this.div.clientWidth || window.innerWidth
+    const screenHeight = this.div.clientHeight || window.innerHeight
     const screenRatio = screenWidth / screenHeight
     const IDEAL_WIDTH = 42 * 48
     const MIN_HEIGHT = 1050

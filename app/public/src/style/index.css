@@ -30,6 +30,7 @@ body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  height: 100dvh;
   background-color: var(--color-bg-primary);
   background-image:
     linear-gradient(
@@ -103,6 +104,7 @@ kbd {
 #root {
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
 }
 
 .custom-theme-tooltip {
@@ -127,6 +129,7 @@ p:last-child {
 
 #game {
   height: 100vh;
+  height: 100dvh;
   width: calc(100vw - var(--sidebar-width));
 }
 
@@ -135,6 +138,17 @@ p:last-child {
   left: 60px;
   width: calc(100vw - var(--sidebar-width));
   user-select: none;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  #root #game-wrapper {
+    left: 0;
+    width: 100vw;
+  }
+
+  #root #game {
+    width: 100vw;
+  }
 }
 
 #game-wrapper .ps-sidebar-root {
