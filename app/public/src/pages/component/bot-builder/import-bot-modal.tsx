@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { IBot } from "../../../models/bot-v2"
+import { pacFetch } from "../../../pac-api"
 import { Modal } from "../modal/modal"
 
 export default function ImportBotModal(props: {
@@ -13,7 +14,7 @@ export default function ImportBotModal(props: {
 
   const [botList, setBotList] = useState<IBot[]>([])
   useEffect(() => {
-    fetch("/bots")
+    pacFetch("/bots")
       .then((res) => res.json())
       .then((data) => {
         setBotList(data.sort((a, b) => a.name.localeCompare(b.name)))
@@ -59,7 +60,7 @@ export default function ImportBotModal(props: {
               defaultValue=""
               onChange={(e) => {
                 if (e.target.value.length != 0) {
-                  fetch(`/bots/${e.target.value}`)
+                  pacFetch(`/bots/${e.target.value}`)
                     .then((r) => r.json())
                     .then((bot) => {
                       setTextArea(JSON.stringify(bot, null, 2))

@@ -29,6 +29,7 @@ import { max, min } from "../../../../../utils/number"
 import { joinLobbyRoom } from "../../../game/lobby-logic"
 import { useAppDispatch, useAppSelector } from "../../../hooks"
 import type { IBot, IDetailledPokemon } from "../../../models/bot-v2"
+import { pacFetch } from "../../../pac-api"
 import DiscordButton from "../buttons/discord-button"
 import { Modal } from "../modal/modal"
 import ImportBotModal from "./import-bot-modal"
@@ -75,7 +76,7 @@ export default function BotBuilder() {
     if (botId && (!bot || bot.id !== botId)) {
       logger.debug(`loading bot ${botId}`)
       // query param but no matching bot data, so we request it
-      fetch(`/bots/${botId}`)
+      pacFetch(`/bots/${botId}`)
         .then((r) => r.json())
         .then((botData) => {
           setBot(rewriteBotRoundsRequiredto1(structuredClone(botData)))
@@ -368,7 +369,7 @@ export function SubmitBotModal(props: {
     setSuccess(false)
     try {
       const token = await firebase.auth().currentUser?.getIdToken()
-      const res = await fetch("/bots", {
+      const res = await pacFetch("/bots", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

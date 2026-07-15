@@ -1,4 +1,5 @@
 import type { IItemsStatisticV2 } from "../../../types/models/items-statistic-v2"
+import { pacFetch } from "../pac-api"
 
 export type {
   IHistoryEntry,
@@ -7,5 +8,7 @@ export type {
 } from "../../../types/models/items-statistic-v2"
 
 export async function fetchMetaItems(): Promise<IItemsStatisticV2[]> {
-  return fetch(`/meta/items?t=${new Date().getUTCDate()}`).then((res) => res.json())
+  return pacFetch(`/meta/items?t=${new Date().getUTCDate()}`).then((res) =>
+    res.json()
+  )
 }

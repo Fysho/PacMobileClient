@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react"
 import { useTranslation } from "react-i18next"
+import { pacFetch } from "../../../pac-api"
 import { Checkbox } from "../checkbox/checkbox"
 import "./sprite-gap-scanner.css"
 
@@ -38,7 +39,7 @@ export default function SpriteGapScanner() {
     const fetchData = async () => {
       try {
         setLoading(true)
-        const response = await fetch("/sprite-gap-scanner")
+        const response = await pacFetch("/sprite-gap-scanner")
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`)
         }

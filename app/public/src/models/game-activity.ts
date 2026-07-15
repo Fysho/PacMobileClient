@@ -1,3 +1,5 @@
+import { pacFetch } from "../pac-api"
+
 export type {
   IGameActivity,
   IGameActivityDay
@@ -6,7 +8,9 @@ export type {
 export async function fetchGameActivity(): Promise<
   import("../../../types/models/game-activity").IGameActivity
 > {
-  const response = await fetch(`/meta/game-activity?t=${new Date().getUTCDate()}`)
+  const response = await pacFetch(
+    `/meta/game-activity?t=${new Date().getUTCDate()}`
+  )
   if (!response.ok) {
     throw new Error(`Failed to fetch game activity: ${response.status}`)
   }

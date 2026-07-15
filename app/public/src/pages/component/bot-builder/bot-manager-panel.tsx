@@ -7,6 +7,7 @@ import { List } from "react-window"
 import type { Pkm } from "../../../../../types/enum/Pokemon"
 import type { IBotLight } from "../../../models/bot-v2"
 import { authenticateUser } from "../../../network"
+import { pacFetch } from "../../../pac-api"
 import { cc } from "../../utils/jsx"
 import PokemonPortrait from "../pokemon-portrait"
 import { PokemonTypeahead } from "../typeahead/pokemon-typeahead"
@@ -105,7 +106,7 @@ function BotsList(props: {
 
   useEffect(() => {
     authenticateUser()
-    fetch(
+    pacFetch(
       `/bots?${props.filteredPokemon ? `pkm=${props.filteredPokemon}` : ""}&t=${Date.now()}`
     )
       .then((res) => res.json())
@@ -123,7 +124,7 @@ function BotsList(props: {
     )
       return
     const token = await firebase.auth().currentUser?.getIdToken()
-    const res = await fetch(`/bots/${bot.id}`, {
+    const res = await pacFetch(`/bots/${bot.id}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`
@@ -136,7 +137,7 @@ function BotsList(props: {
 
   async function approveBot(botId: string, approved: boolean) {
     const token = await firebase.auth().currentUser?.getIdToken()
-    const res = await fetch(`/bots/${botId}/approve`, {
+    const res = await pacFetch(`/bots/${botId}/approve`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,

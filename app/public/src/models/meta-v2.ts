@@ -1,4 +1,5 @@
 import type { IMetaV2 } from "../../../types/models/meta-v2"
+import { pacFetch } from "../pac-api"
 
 export type {
   IMeanTeam,
@@ -7,5 +8,7 @@ export type {
 } from "../../../types/models/meta-v2"
 
 export async function fetchMetaV2(): Promise<IMetaV2[]> {
-  return fetch(`/meta-v2?t=${new Date().getUTCDate()}`).then((res) => res.json())
+  return pacFetch(`/meta-v2?t=${new Date().getUTCDate()}`).then((res) =>
+    res.json()
+  )
 }

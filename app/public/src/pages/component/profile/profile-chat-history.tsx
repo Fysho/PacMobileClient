@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import type { IChatV2 } from "../../../../../types"
+import { pacFetch } from "../../../pac-api"
 import ChatHistory from "../chat/chat-history"
 
 export function ProfileChatHistory(props: { uid: string }) {
@@ -14,7 +15,7 @@ export function ProfileChatHistory(props: { uid: string }) {
     try {
       setLoading(true)
 
-      const response = await fetch(
+      const response = await pacFetch(
         `/chat-history/${uid}?page=${page}&t=${Date.now()}`
       )
       const data: IChatV2[] = await response.json()

@@ -11,6 +11,7 @@ import { Weather } from "../../../../types/enum/Weather"
 import { logger } from "../../../../utils/logger"
 import { max } from "../../../../utils/number"
 import { OrientationVector } from "../../../../utils/orientation"
+import { pacFetch } from "../../pac-api"
 import { playMusic, preloadMusic } from "../../pages/utils/audio"
 import { transformEntityCoordinates } from "../../pages/utils/utils"
 import { preference } from "../../preferences"
@@ -186,7 +187,7 @@ export class DebugScene extends Phaser.Scene {
       })
     }
 
-    return fetch(`/tilemap/${mapName}`)
+    return pacFetch(`/tilemap/${mapName}`)
       .then((res) => res.json())
       .then((tilemap: DesignTiled) => {
         this.tilemap = tilemap

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next"
 import { AutoSizer } from "react-virtualized-auto-sizer"
 import { List } from "react-window"
 import { getPortraitSrc } from "../../../../../utils/avatar"
+import { pacFetch } from "../../../pac-api"
 import { Checkbox } from "../checkbox/checkbox"
 import "./sprite-tracker.css"
 
@@ -197,7 +198,7 @@ export default function SpriteTracker() {
     const fetchData = async () => {
       try {
         setLoading(true)
-        const response = await fetch("/sprite-gap-scanner")
+        const response = await pacFetch("/sprite-gap-scanner")
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`)
         }

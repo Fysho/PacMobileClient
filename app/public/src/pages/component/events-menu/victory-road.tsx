@@ -7,6 +7,7 @@ import { getRankLabel } from "../../../../../types/strings/Strings"
 import { clamp } from "../../../../../utils/number"
 import { useAppSelector, useGameEventResetCountdown } from "../../../hooks"
 import { searchById } from "../../../network"
+import { pacFetch } from "../../../pac-api"
 import { setEventLeaderboard } from "../../../stores/LobbyStore"
 import { formatDate, formatDuration } from "../../utils/date"
 import { cc } from "../../utils/jsx"
@@ -22,7 +23,7 @@ export function VictoryRoad() {
 
   useEffect(() => {
     function fetchEventLeaderboard() {
-      fetch("/leaderboards/event")
+      pacFetch("/leaderboards/event")
         .then((res) => res.json())
         .then((data) => {
           setEventLeaderboard(data)

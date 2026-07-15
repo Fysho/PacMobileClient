@@ -29,6 +29,7 @@ import { logger } from "../../../../utils/logger"
 import { clamp } from "../../../../utils/number"
 import { schemaValues } from "../../../../utils/schemas"
 import { clearTitleNotificationIcon } from "../../../../utils/window"
+import { pacFetch } from "../../pac-api"
 import { cyclePlayers, playerClick } from "../../pages/game"
 import { playMusic, playSound, SOUNDS } from "../../pages/utils/audio"
 import { transformBoardCoordinates } from "../../pages/utils/utils"
@@ -341,7 +342,7 @@ export default class GameScene extends Scene {
   preloadMaps(mapNames: DungeonPMDO[]) {
     return Promise.all(
       mapNames.map((mapName: DungeonPMDO) =>
-        fetch(`/tilemap/${mapName}`)
+        pacFetch(`/tilemap/${mapName}`)
           .then((res) => res.json())
           .then((tilemap: DesignTiled) => {
             this.tilemaps.set(mapName, tilemap)

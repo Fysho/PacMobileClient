@@ -2,6 +2,7 @@ import { useEffect } from "react"
 import { useTranslation } from "react-i18next"
 import { Tab, TabList, TabPanel, Tabs } from "react-tabs"
 import { useAppDispatch, useAppSelector } from "../../../hooks"
+import { pacFetch } from "../../../pac-api"
 import {
   setBotLeaderboard,
   setEventLeaderboard,
@@ -21,7 +22,7 @@ export default function LeaderboardMenu() {
   const tabIndex: number = useAppSelector((state) => state.lobby.tabIndex)
 
   useEffect(() => {
-    fetch("/leaderboards")
+    pacFetch("/leaderboards")
       .then((res) => res.json())
       .then((data) => {
         dispatch(setLeaderboard(data.leaderboard))

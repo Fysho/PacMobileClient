@@ -12,6 +12,7 @@ import type {
 import { computeSynergies } from "../../../../../models/colyseus-models/synergies"
 import PokemonFactory from "../../../../../models/pokemon-factory"
 import type { Synergy } from "../../../../../types/enum/Synergy"
+import { pacFetch } from "../../../pac-api"
 import { formatDate } from "../../utils/date"
 import Team from "../after/team"
 import { GameModeIcon } from "../icons/game-mode-icon"
@@ -41,7 +42,7 @@ export default function GameHistory(props: {
     try {
       setLoading(true)
 
-      const response = await fetch(
+      const response = await pacFetch(
         `/game-history/${uid}?page=${page}&t=${Date.now()}`
       )
       const data: IGameRecord[] = await response.json()

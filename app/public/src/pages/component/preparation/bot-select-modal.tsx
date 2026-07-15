@@ -5,6 +5,7 @@ import { AutoSizer } from "react-virtualized-auto-sizer"
 import { Grid } from "react-window"
 import type { IBot } from "../../../models/bot-v2"
 import { addBot } from "../../../network"
+import { pacFetch } from "../../../pac-api"
 import { cc } from "../../utils/jsx"
 import { Modal } from "../modal/modal"
 import { EloBadge } from "../profile/elo-badge"
@@ -37,7 +38,7 @@ export function BotSelectModal(props: {
   const [botsList, setBotsList] = useState<IBot[] | null>(null)
   useEffect(() => {
     if (botsList === null) {
-      fetch(`/bots?approved=true&t=${Date.now()}`)
+      pacFetch(`/bots?approved=true&t=${Date.now()}`)
         .then((r) => r.json())
         .then((bots) => {
           setBotsList(bots)

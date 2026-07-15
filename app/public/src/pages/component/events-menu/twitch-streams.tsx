@@ -3,9 +3,10 @@ import { useTranslation } from "react-i18next"
 import { Role } from "../../../../../types"
 import { useAppSelector } from "../../../hooks"
 import { addTwitchBlacklist } from "../../../network"
+import { pacFetch } from "../../../pac-api"
 import { RemoveButton } from "../buttons/remove-button"
 import { Modal } from "../modal/modal"
-import "./twitch-streams.css";
+import "./twitch-streams.css"
 
 type TwitchStream = {
   id: string
@@ -60,7 +61,7 @@ export function TwitchStreams() {
 
   const fetchStreams = useCallback(async () => {
     try {
-      const response = await fetch(
+      const response = await pacFetch(
         `/twitch/streams?t=${Math.floor(Date.now() / 300000)}`
       )
       const data = (await response.json()) as TwitchStreamsResponse

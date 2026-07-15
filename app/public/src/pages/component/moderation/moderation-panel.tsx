@@ -12,6 +12,7 @@ import {
   searchMessages,
   type TwitchBlacklistEntry
 } from "../../../network"
+import { pacFetch } from "../../../pac-api"
 import { RemoveButton } from "../buttons/remove-button"
 import ChatHistory from "../chat/chat-history"
 import SearchResults from "../profile/search-results"
@@ -219,7 +220,7 @@ function RenameAccounts() {
     setSearchError(null)
     try {
       const token = await firebase.auth().currentUser?.getIdToken()
-      const res = await fetch(`/players?name=${encodeURIComponent(q)}`, {
+      const res = await pacFetch(`/players?name=${encodeURIComponent(q)}`, {
         headers: { Authorization: `Bearer ${token}` },
         signal: abortRef.current.signal
       })

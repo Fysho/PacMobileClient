@@ -49,6 +49,7 @@ import {
   useAppSelector
 } from "../hooks"
 import { authenticateUser, client, joinGame, rooms } from "../network"
+import { pacFetch } from "../pac-api"
 import store from "../stores"
 import {
   addDpsMeter,
@@ -390,7 +391,7 @@ export default function Game() {
 
   useEffect(() => {
     try {
-      fetch("/leaderboards")
+      pacFetch("/leaderboards")
         .then((res) => res.json())
         .then((data) => {
           dispatch(setPodium(data.leaderboard.slice(0, 3)))
@@ -984,7 +985,9 @@ export default function Game() {
           <GameChoice />
           <GameDpsMeter />
           <GameToasts />
-          {currentGameEvent === GameEvent.EXPEDITIONS && !spectate && <GameExpeditions />}
+          {currentGameEvent === GameEvent.EXPEDITIONS && !spectate && (
+            <GameExpeditions />
+          )}
         </>
       ) : (
         <GameLoadingScreen connectError={connectError} />

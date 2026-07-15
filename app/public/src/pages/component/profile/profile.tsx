@@ -16,6 +16,7 @@ import {
   searchById,
   unban
 } from "../../../network"
+import { pacFetch } from "../../../pac-api"
 import { setSearchedUser } from "../../../stores/LobbyStore"
 import { AccountTab } from "./account-tab"
 import { AvatarTab } from "./avatar-tab"
@@ -52,7 +53,7 @@ export default function Profile() {
     setError("")
     try {
       const token = await firebase.auth().currentUser?.getIdToken()
-      const res = await fetch(`/players?name=${encodeURIComponent(query)}`, {
+      const res = await pacFetch(`/players?name=${encodeURIComponent(query)}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

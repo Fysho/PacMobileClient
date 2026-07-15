@@ -51,7 +51,9 @@ context({
     "process.env.FIREBASE_MESSAGING_SENDER_ID": `"${process.env.FIREBASE_MESSAGING_SENDER_ID}"`,
     "process.env.FIREBASE_APP_ID": `"${process.env.FIREBASE_APP_ID}"`,
     "process.env.DISCORD_SERVER": `"${process.env.DISCORD_SERVER}"`,
-    "process.env.MIN_HUMAN_PLAYERS": `"${process.env.MIN_HUMAN_PLAYERS}"`
+    "process.env.MIN_HUMAN_PLAYERS": `"${process.env.MIN_HUMAN_PLAYERS}"`,
+    "process.env.PAC_HTTP_ORIGIN": `"${process.env.PAC_HTTP_ORIGIN ?? ""}"`,
+    "process.env.PAC_WS_ORIGIN": `"${process.env.PAC_WS_ORIGIN ?? ""}"`
   }
 })
   .then((context) => {

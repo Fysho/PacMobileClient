@@ -2,7 +2,7 @@ import { Client, type Room } from "@colyseus/sdk"
 import type { User } from "@firebase/auth-types"
 import firebase from "firebase/compat/app"
 import type { server } from "../../app.config.ts"
-import { FIREBASE_CONFIG } from "../../config"
+import { FIREBASE_CONFIG, PAC_WS_ORIGIN } from "../../config"
 import type AfterGameState from "../../rooms/states/after-game-state"
 import type GameState from "../../rooms/states/game-state"
 import type LobbyState from "../../rooms/states/lobby-state"
@@ -17,17 +17,15 @@ import type { SpecialGameRule } from "../../types/enum/SpecialGameRule"
 import type { IUserMetadataJSON } from "../../types/interfaces/UserMetadata"
 import { logger } from "../../utils/logger"
 import type { IBot } from "./models/bot-v2"
+import { pacFetch } from "./pac-api"
 import { LocalStoreKeys, localStore } from "./pages/utils/store.js"
 import store from "./stores"
 import { setBoosterContent } from "./stores/BoostersStore"
 import { logIn, setProfile } from "./stores/NetworkStore"
 
-const endpoint = `${window.location.protocol.replace("http", "ws")}//${
-  window.location.host
-}`
-logger.info(`Colyseus endpoint: ${endpoint}`)
+logger.info(`Colyseus endpoint: ${PAC_WS_ORIGIN}`)
 
-export const client = new Client<typeof server>(endpoint)
+export const client = new Client<typeof server>(PAC_WS_ORIGIN)
 
 export function authenticateUser() {
   if (!firebase.apps.length) {
@@ -50,7 +48,7 @@ export async function fetchProfile(forceRefresh: boolean = false) {
   if (!forceRefresh && profile) {
     return Promise.resolve(profile)
   }
-  return fetch(`/profile?t=${Date.now()}`, {
+  return pacFetch(`/profile?t=${Date.now()}`, {
     headers: {
       Authorization: `Bearer ${token}`
     }
@@ -68,7 +66,7 @@ export type TwitchVerificationStartResponse = {
 
 export async function startTwitchVerification(): Promise<TwitchVerificationStartResponse> {
   const token = await firebase.auth().currentUser?.getIdToken()
-  const res = await fetch("/twitch/verify/start", {
+  const res = await pacFetch("/twitch/verify/start", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`
@@ -85,7 +83,7 @@ export async function startTwitchVerification(): Promise<TwitchVerificationStart
 
 export async function unlinkTwitchVerification(): Promise<void> {
   const token = await firebase.auth().currentUser?.getIdToken()
-  const res = await fetch("/twitch/verify/unlink", {
+  const res = await pacFetch("/twitch/verify/unlink", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`
@@ -259,7 +257,7 @@ export async function buyEmotion(params: {
   const token = await firebase.auth().currentUser?.getIdToken()
   if (!token) throw new Error("User not authenticated")
 
-  const res = await fetch("/collection/buy-emotion", {
+  const res = await pacFetch("/collection/buy-emotion", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -286,7 +284,7 @@ export async function changeSelectedEmotion(params: {
   const token = await firebase.auth().currentUser?.getIdToken()
   if (!token) throw new Error("User not authenticated")
 
-  const res = await fetch("/collection/change-selected-emotion", {
+  const res = await pacFetch("/collection/change-selected-emotion", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -309,7 +307,7 @@ export async function buyBooster(params: { index: string }) {
   const token = await firebase.auth().currentUser?.getIdToken()
   if (!token) throw new Error("User not authenticated")
 
-  const res = await fetch("/boosters/buy", {
+  const res = await pacFetch("/boosters/buy", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -330,7 +328,7 @@ export async function buyBooster(params: { index: string }) {
 
 export async function openBooster() {
   const token = await firebase.auth().currentUser?.getIdToken()
-  const res = await fetch("/boosters/open", {
+  const res = await pacFetch("/boosters/open", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${token}`
@@ -407,7 +405,7 @@ export async function searchMessages(
   query: string
 ): Promise<import("../../types").IChatV2[]> {
   const token = await firebase.auth().currentUser?.getIdToken()
-  const res = await fetch(
+  const res = await pacFetch(
     `/moderation/chat-search?query=${encodeURIComponent(query)}`,
     { headers: { Authorization: `Bearer ${token}` } }
   )
@@ -420,7 +418,7 @@ export async function renameAccount(
   newName: string
 ): Promise<{ displayName: string }> {
   const token = await firebase.auth().currentUser?.getIdToken()
-  const res = await fetch("/moderation/rename-account", {
+  const res = await pacFetch("/moderation/rename-account", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -445,7 +443,7 @@ export type TwitchBlacklistEntry = {
 
 export async function getTwitchBlacklist(): Promise<TwitchBlacklistEntry[]> {
   const token = await firebase.auth().currentUser?.getIdToken()
-  const res = await fetch("/moderation/twitch-blacklist", {
+  const res = await pacFetch("/moderation/twitch-blacklist", {
     headers: { Authorization: `Bearer ${token}` }
   })
   if (!res.ok) {
@@ -460,7 +458,7 @@ export async function addTwitchBlacklist(
   reason?: string
 ): Promise<void> {
   const token = await firebase.auth().currentUser?.getIdToken()
-  const res = await fetch("/moderation/twitch-blacklist", {
+  const res = await pacFetch("/moderation/twitch-blacklist", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -478,7 +476,7 @@ export async function removeTwitchBlacklist(
   streamerLogin: string
 ): Promise<void> {
   const token = await firebase.auth().currentUser?.getIdToken()
-  const res = await fetch(
+  const res = await pacFetch(
     `/moderation/twitch-blacklist/${encodeURIComponent(streamerLogin)}`,
     {
       method: "DELETE",

@@ -1,4 +1,5 @@
 import type { IDendrogram } from "../../../types/models/dendrogram"
+import { pacFetch } from "../pac-api"
 
 export type {
   IBranchProfile,
@@ -8,5 +9,5 @@ export type {
 } from "../../../types/models/dendrogram"
 
 export async function fetchDendrogram(): Promise<IDendrogram | null> {
-  return fetch("/dendrogram").then((res) => res.json())
+  return pacFetch("/dendrogram").then((res) => res.json())
 }

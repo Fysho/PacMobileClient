@@ -1,4 +1,12 @@
-export const BASE_URL = "https://pokemon-auto-chess.com"
+const DEFAULT_BASE_URL = "https://pokemon-auto-chess.com"
+const configuredBaseUrl =
+  process.env.PAC_HTTP_ORIGIN ||
+  (typeof window !== "undefined" ? window.location.origin : DEFAULT_BASE_URL)
+
+export const BASE_URL = configuredBaseUrl.replace(/\/+$/, "")
+export const PAC_WS_ORIGIN = (
+  process.env.PAC_WS_ORIGIN || BASE_URL.replace(/^http/, "ws")
+).replace(/\/+$/, "")
 
 export const MAX_POOL_CONNECTIONS_SIZE = 16
 export const MAX_CONCURRENT_PLAYERS_ON_SERVER = 1000

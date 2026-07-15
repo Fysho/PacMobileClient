@@ -1,7 +1,10 @@
 import type { IReportMetadata } from "../../../types/models/report-metadata"
+import { pacFetch } from "../pac-api"
 
 export type { IReportMetadata } from "../../../types/models/report-metadata"
 
 export async function fetchMetadata(): Promise<IReportMetadata[]> {
-  return fetch(`/meta/metadata?t=${new Date().getUTCDate()}`).then((res) => res.json())
+  return pacFetch(`/meta/metadata?t=${new Date().getUTCDate()}`).then((res) =>
+    res.json()
+  )
 }

@@ -11,6 +11,7 @@ import { EloRank } from "../../../../../types/enum/EloRank"
 import { GameMode } from "../../../../../types/enum/Game"
 import { getRank } from "../../../../../utils/elo"
 import { useAppSelector } from "../../../hooks"
+import { pacFetch } from "../../../pac-api"
 
 export function EloTab() {
   const { t } = useTranslation()
@@ -43,7 +44,7 @@ export function EloTab() {
         ? user.elo >= EloRankThreshold[EloRank.ULTRA_BALL]
         : false
 
-      const response = await fetch(
+      const response = await pacFetch(
         `/game-history/${uid}?page=${page}&t=${Date.now()}${requiresRanked ? `&gameMode=${GameMode.RANKED}` : ""}`
       )
       const data: IGameRecord[] = await response.json()

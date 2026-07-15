@@ -7,6 +7,7 @@ import {
 } from "../../../../../core/expeditions"
 import type { Expedition } from "../../../../../types/enum/Expedition"
 import { useAppSelector, useGameEventResetCountdown } from "../../../hooks"
+import { pacFetch } from "../../../pac-api"
 import { setEventLeaderboard } from "../../../stores/LobbyStore"
 import { formatDuration } from "../../utils/date"
 import { addIconsToDescription } from "../../utils/descriptions"
@@ -24,7 +25,7 @@ export function Expeditions() {
 
   useEffect(() => {
     function fetchEventLeaderboard() {
-      fetch("/leaderboards/event")
+      pacFetch("/leaderboards/event")
         .then((res) => res.json())
         .then((data) => {
           setEventLeaderboard(data)
