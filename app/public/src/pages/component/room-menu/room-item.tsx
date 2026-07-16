@@ -88,75 +88,77 @@ export default function RoomItem(props: {
         ) + " "}
         {props.room.metadata?.name}
       </span>
-      {props.room.metadata?.passwordProtected && (
-        <img
-          alt={t("private")}
-          title={t("password_protected")}
-          className="lock icon"
-          src="/assets/ui/lock.svg"
-        />
-      )}
-      {props.room.metadata?.gameMode === GameMode.SCRIBBLE && (
-        <GameModeIcon gameMode={GameMode.SCRIBBLE} />
-      )}
-      {props.room.metadata?.noElo &&
-        props.room.metadata?.gameMode === GameMode.CUSTOM_LOBBY && (
+      <div className="room-details">
+        {props.room.metadata?.passwordProtected && (
           <img
-            alt={t("no_elo")}
-            title={t("no_elo")}
-            className="noelo gamemode icon"
-            src="/assets/ui/noelo.png"
+            alt={t("private")}
+            title={t("password_protected")}
+            className="lock icon"
+            src="/assets/ui/lock.svg"
           />
         )}
-      {props.room.metadata?.gameMode === GameMode.CLASSIC && (
-        <GameModeIcon gameMode={GameMode.CLASSIC} />
-      )}
-      {props.room.metadata?.gameMode === GameMode.RANKED && (
-        <GameModeIcon gameMode={GameMode.RANKED} />
-      )}
-      {props.room.metadata?.minRank && (
-        <img
-          alt={t("minimum_rank")}
-          title={
-            t("minimum_rank") +
-            ": " +
-            t(`elorank.${props.room.metadata?.minRank}`)
-          }
-          className="rank icon"
-          src={"/assets/ranks/" + props.room.metadata?.minRank + ".svg"}
-        />
-      )}
-      <span>
-        {props.room.clients}/{nbPlayersExpected}
-      </span>
-      {isAdmin && (
+        {props.room.metadata?.gameMode === GameMode.SCRIBBLE && (
+          <GameModeIcon gameMode={GameMode.SCRIBBLE} />
+        )}
+        {props.room.metadata?.noElo &&
+          props.room.metadata?.gameMode === GameMode.CUSTOM_LOBBY && (
+            <img
+              alt={t("no_elo")}
+              title={t("no_elo")}
+              className="noelo gamemode icon"
+              src="/assets/ui/noelo.png"
+            />
+          )}
+        {props.room.metadata?.gameMode === GameMode.CLASSIC && (
+          <GameModeIcon gameMode={GameMode.CLASSIC} />
+        )}
+        {props.room.metadata?.gameMode === GameMode.RANKED && (
+          <GameModeIcon gameMode={GameMode.RANKED} />
+        )}
+        {props.room.metadata?.minRank && (
+          <img
+            alt={t("minimum_rank")}
+            title={
+              t("minimum_rank") +
+              ": " +
+              t(`elorank.${props.room.metadata?.minRank}`)
+            }
+            className="rank icon"
+            src={"/assets/ranks/" + props.room.metadata?.minRank + ".svg"}
+          />
+        )}
+        <span>
+          {props.room.clients}/{nbPlayersExpected}
+        </span>
+        {isAdmin && (
+          <button
+            title={t("delete_room")}
+            onClick={() => {
+              props.click("delete")
+            }}
+          >
+            X
+          </button>
+        )}
         <button
-          title={t("delete_room")}
+          title={disabledReason ?? t("join")}
+          disabled={!canJoin || joining}
+          className={cc(
+            "bubbly",
+            joining ? "loading" : "",
+            props.room.metadata?.passwordProtected ? "orange" : "green"
+          )}
           onClick={() => {
-            props.click("delete")
+            if (canJoin && !joining) {
+              props.click("join")
+              setJoining(true)
+              setTimeout(() => setJoining(false), 3000)
+            }
           }}
         >
-          X
+          {t("join")}
         </button>
-      )}
-      <button
-        title={disabledReason ?? t("join")}
-        disabled={!canJoin || joining}
-        className={cc(
-          "bubbly",
-          joining ? "loading" : "",
-          props.room.metadata?.passwordProtected ? "orange" : "green"
-        )}
-        onClick={() => {
-          if (canJoin && !joining) {
-            props.click("join")
-            setJoining(true)
-            setTimeout(() => setJoining(false), 3000)
-          }
-        }}
-      >
-        {t("join")}
-      </button>
+      </div>
     </div>
   )
 }

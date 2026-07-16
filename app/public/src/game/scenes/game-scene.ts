@@ -52,6 +52,8 @@ const MOBILE_POINTER_QUERY = "(hover: none) and (pointer: coarse)"
 const DEFAULT_INVENTORY_Y = 5 * 24 + 10
 const INVENTORY_ITEM_RADIUS = 30
 const MOBILE_INVENTORY_GAP_PX = 4
+const MAP_EDGE_MIRROR_REFRESH_MS = 100
+const MOBILE_DRAG_DISTANCE_THRESHOLD = 40
 
 export default class GameScene extends Scene {
   tilemaps: Map<DungeonPMDO, DesignTiled> = new Map<DungeonPMDO, DesignTiled>()
@@ -59,6 +61,8 @@ export default class GameScene extends Scene {
   uid: string | undefined
   mapName: DungeonPMDO | "town" = "town"
   map: Phaser.Tilemaps.Tilemap | undefined
+  mapEdgeMirror: Phaser.GameObjects.RenderTexture | undefined
+  lastMapEdgeMirrorRefresh = 0
   battleGroup: GameObjects.Group | undefined
   abilitiesVfxGroup: GameObjects.Group | undefined
   animationManager: AnimationManager | undefined
@@ -124,7 +128,10 @@ export default class GameScene extends Scene {
     if (this.uid && this.room) {
       this.registerKeys()
       this.setupCamera()
-      this.input.dragDistanceThreshold = 1
+      this.input.dragDistanceThreshold = window.matchMedia(MOBILE_POINTER_QUERY)
+        .matches
+        ? MOBILE_DRAG_DISTANCE_THRESHOLD
+        : 1
 
       const playerUids = schemaValues(this.room.state.players).map((p) => p.id)
       const player = this.room.state.players.get(
@@ -210,10 +217,49 @@ export default class GameScene extends Scene {
     })
   }
 
+  refreshMapEdgeMirror() {
+    this.mapEdgeMirror?.destroy()
+    this.mapEdgeMirror = undefined
+
+    const layers = this.map?.layers.map((layer) => layer.tilemapLayer) ?? []
+    if (layers.length === 0) return
+
+    const mapWidth = Math.max(
+      ...layers.map((layer) => layer.x + layer.displayWidth)
+    )
+    const mirrorWidth = Math.ceil(this.scale.width - mapWidth)
+    if (mirrorWidth <= 0) return
+
+    this.mapEdgeMirror = this.add
+      .renderTexture(mapWidth, 0, mirrorWidth, Math.ceil(this.scale.height))
+      .setOrigin(0, 0)
+      .setFlipX(true)
+      .setDepth(layers.at(-1)?.depth ?? 0)
+    this.drawMapEdgeMirror()
+  }
+
+  private drawMapEdgeMirror() {
+    if (!this.mapEdgeMirror || !this.map) return
+
+    const sourceX = this.mapEdgeMirror.x - this.mapEdgeMirror.width
+    this.mapEdgeMirror.clear()
+    this.map.layers.forEach((layer) => {
+      this.mapEdgeMirror?.draw(layer.tilemapLayer, -sourceX, 0)
+    })
+    this.mapEdgeMirror.render()
+  }
+
   update(time: number, delta: number) {
     super.update(time, delta)
     if (this.lastPokemonDetail) {
       this.lastPokemonDetail.updateTooltipPosition()
+    }
+    if (
+      this.mapEdgeMirror &&
+      time - this.lastMapEdgeMirrorRefresh >= MAP_EDGE_MIRROR_REFRESH_MS
+    ) {
+      this.drawMapEdgeMirror()
+      this.lastMapEdgeMirrorRefresh = time
     }
     if (
       this.room?.state?.phase === GamePhaseState.TOWN &&
@@ -397,6 +443,7 @@ export default class GameScene extends Scene {
       this.map.createLayer("layer0", tileset, 0, 0)?.setScale(2, 2)
       this.map.createLayer("layer1", tileset, 0, 0)?.setScale(2, 2)
       this.map.createLayer("layer2", tileset, 0, 0)?.setScale(2, 2)
+      this.refreshMapEdgeMirror()
       return
     }
 
@@ -416,6 +463,7 @@ export default class GameScene extends Scene {
       map.createLayer(layer.name, tileset, 0, 0)?.setScale(2, 2)
     })
     this.toggleTilesetAnimation(preference("disableAnimatedTilemap"))
+    this.refreshMapEdgeMirror()
 
     // update region tint on pokemons
     this.board?.pokemons.forEach((p) => {

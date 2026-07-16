@@ -63,6 +63,7 @@ import {
 } from "./pokemon-animations"
 
 const spriteCountPerPokemon = new Map<string, number>()
+const MOBILE_LONG_PRESS_MAX_DISTANCE = 24
 
 export function resetSpriteCounts() {
   spriteCountPerPokemon.clear()
@@ -150,6 +151,7 @@ export default class PokemonSprite extends DraggableObject {
       CELL_VISUAL_HEIGHT,
       playerId !== scene.uid
     )
+    this.on("pointerupoutside", () => this.onPointerUp())
     this.scene = scene
     this.flip = flip
     this.playerId = playerId
@@ -461,7 +463,11 @@ export default class PokemonSprite extends DraggableObject {
           pointer.x,
           pointer.y
         )
-        if (pointer.isDown && distance <= 16 && !this.detail) {
+        if (
+          pointer.isDown &&
+          distance <= MOBILE_LONG_PRESS_MAX_DISTANCE &&
+          !this.detail
+        ) {
           this.openDetail()
           this.detailOpenedByLongPress = this.detail != null
         }
@@ -473,8 +479,13 @@ export default class PokemonSprite extends DraggableObject {
   }
 
   onPointerUp(): void {
+    const closeDetailOnRelease = this.detailOpenedByLongPress
     this.cancelLongPress()
     super.onPointerUp()
+    if (closeDetailOnRelease) {
+      this.closeDetail()
+      return
+    }
     if (
       this.shouldShowTooltip &&
       preference("showDetailsOnHover") &&
@@ -484,9 +495,9 @@ export default class PokemonSprite extends DraggableObject {
     }
   }
 
-  onPointerOut(): void {
-    this.cancelLongPress()
-    super.onPointerOut()
+  onPointerOut(pointer?: Phaser.Input.Pointer): void {
+    if (!pointer?.wasTouch || !pointer.isDown) this.cancelLongPress()
+    super.onPointerOut(pointer)
     if (
       this.shouldShowTooltip &&
       preference("showDetailsOnHover") &&

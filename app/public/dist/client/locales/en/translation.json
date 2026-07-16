@@ -1,4 +1,5 @@
 {
+	"landscape_required": "Rotate your device to landscape to continue.",
 	"pkm": {
 		"DEFAULT": "MissingNo.",
 		"EGG": "Egg",

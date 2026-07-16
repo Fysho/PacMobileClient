@@ -346,6 +346,7 @@ class GameContainer {
       (this.game.scale.height !== height || this.game.scale.width !== width)
     ) {
       this.game.scale.setGameSize(width, height)
+      this.gameScene?.refreshMapEdgeMirror()
     }
   }
 

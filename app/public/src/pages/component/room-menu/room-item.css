@@ -1,17 +1,25 @@
 .room-item {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
   gap: 0.5em;
 }
 
-.room-item .room-name,
-.room-item .room-info {
-  flex: 1;
+.room-item .room-name {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  word-break: break-word;
 }
 
-.room-item .room-name {
-  word-break: break-word;
+.room-item .room-details {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 0.4em;
+  min-width: 0;
 }
 
 .room-item .icon {

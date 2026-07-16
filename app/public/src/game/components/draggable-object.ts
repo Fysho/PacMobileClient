@@ -20,7 +20,9 @@ export default class DraggableObject extends GameObjects.Container {
       .on("pointerover", (pointer: Phaser.Input.Pointer) => {
         this.onPointerOver(pointer)
       })
-      .on("pointerout", () => this.onPointerOut())
+      .on("pointerout", (pointer: Phaser.Input.Pointer) =>
+        this.onPointerOut(pointer)
+      )
       .on(
         "pointerdown",
         (
@@ -63,7 +65,7 @@ export default class DraggableObject extends GameObjects.Container {
     }
   }
 
-  onPointerOut() {
+  onPointerOut(_pointer?: Phaser.Input.Pointer) {
     if (!this.dragDisabled) {
       document.body.classList.remove("grab")
     }

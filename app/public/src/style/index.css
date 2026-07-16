@@ -181,6 +181,10 @@ p:last-child {
     left: 0;
     width: 100vw;
   }
+
+  #root #game {
+    width: 100vw;
+  }
 }
 
 #game-wrapper .ps-sidebar-root {
@@ -394,4 +398,50 @@ summary,
 
 .pixelated {
   image-rendering: pixelated;
+}
+
+.landscape-gate-content {
+  display: contents;
+}
+
+.mobile-landscape-blocker {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: max(24px, env(safe-area-inset-top))
+    max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom))
+    max(24px, env(safe-area-inset-left));
+  background: var(--color-bg-primary);
+  color: var(--color-fg-primary);
+  text-align: center;
+  touch-action: none;
+}
+
+.mobile-landscape-blocker p {
+  max-width: 22rem;
+  margin: 0;
+  font-size: clamp(1.1rem, 5vw, 1.6rem);
+  font-weight: 600;
+}
+
+.mobile-landscape-phone {
+  width: 72px;
+  height: 120px;
+  border: 5px solid currentColor;
+  border-radius: 12px;
+  transform: rotate(90deg);
+}
+
+.mobile-landscape-phone span {
+  display: block;
+  width: 24px;
+  height: 5px;
+  margin: 8px auto 0;
+  border-radius: 999px;
+  background: currentColor;
 }

@@ -1,4 +1,10 @@
-import React, { Suspense } from "react"
+import React, {
+  type PropsWithChildren,
+  Suspense,
+  useEffect,
+  useRef,
+  useState
+} from "react"
 import { createRoot } from "react-dom/client"
 import { Provider } from "react-redux"
 import { BrowserRouter, Route, Routes } from "react-router"
@@ -28,6 +34,88 @@ if (window.opener) {
   window.opener.location.replace(window.location.href)
 }
 
+const MOBILE_PORTRAIT_QUERY =
+  "(hover: none) and (pointer: coarse) and (orientation: portrait)"
+
+type LockableScreenOrientation = ScreenOrientation & {
+  lock?: (orientation: "landscape") => Promise<void>
+}
+
+async function requestLandscapeOrientation(): Promise<void> {
+  const orientation = screen.orientation as LockableScreenOrientation
+  if (!orientation.lock) return
+
+  try {
+    await orientation.lock("landscape")
+  } catch (error) {
+    // Most browsers only permit locking in fullscreen or an installed PWA.
+    if (document.fullscreenElement) {
+      console.info("Unable to lock landscape orientation", error)
+    }
+  }
+}
+
+function LandscapeGate({ children }: PropsWithChildren) {
+  const contentRef = useRef<HTMLDivElement>(null)
+  const portraitMedia = useRef(window.matchMedia(MOBILE_PORTRAIT_QUERY))
+  const [portraitBlocked, setPortraitBlocked] = useState(
+    portraitMedia.current.matches
+  )
+
+  useEffect(() => {
+    const media = portraitMedia.current
+    const updateOrientation = () => {
+      setPortraitBlocked(media.matches)
+      if (media.matches) void requestLandscapeOrientation()
+    }
+    const requestOnFirstTouch = (event: PointerEvent) => {
+      if (event.pointerType === "touch") void requestLandscapeOrientation()
+    }
+
+    updateOrientation()
+    media.addEventListener("change", updateOrientation)
+    document.addEventListener("fullscreenchange", requestLandscapeOrientation)
+    window.addEventListener("pointerdown", requestOnFirstTouch, { once: true })
+
+    return () => {
+      media.removeEventListener("change", updateOrientation)
+      document.removeEventListener(
+        "fullscreenchange",
+        requestLandscapeOrientation
+      )
+      window.removeEventListener("pointerdown", requestOnFirstTouch)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (contentRef.current) contentRef.current.inert = portraitBlocked
+  }, [portraitBlocked])
+
+  return (
+    <>
+      <div
+        ref={contentRef}
+        className="landscape-gate-content"
+        aria-hidden={portraitBlocked || undefined}
+      >
+        {children}
+      </div>
+      {portraitBlocked && (
+        <div
+          className="mobile-landscape-blocker"
+          role="alert"
+          aria-live="assertive"
+        >
+          <div className="mobile-landscape-phone" aria-hidden="true">
+            <span />
+          </div>
+          <p>{i18n.t("landscape_required")}</p>
+        </div>
+      )}
+    </>
+  )
+}
+
 const container = document.getElementById("root")
 const root = createRoot(container!)
 
@@ -36,22 +124,24 @@ i18n.on("initialized", () => {
     <Provider store={store}>
       <React.StrictMode>
         <Suspense fallback="loading">
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Auth />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/lobby" element={<Lobby />} />
-              <Route path="/preparation" element={<Preparation />} />
-              <Route path="/game" element={<Game />} />
-              <Route path="/after" element={<AfterGame />} />
-              <Route path="/bot-builder" element={<BotBuilder />} />
-              <Route path="/bot-admin" element={<BotManagerPanel />} />
-              <Route path="/sprite-viewer" element={<SpriteDebug />} />
-              <Route path="/map-viewer" element={<MapViewer />} />
-              <Route path="/gameboy" element={<Gameboy />} />
-              <Route path="/translations" element={<TranslationsPage />} />
-            </Routes>
-          </BrowserRouter>
+          <LandscapeGate>
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Auth />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/lobby" element={<Lobby />} />
+                <Route path="/preparation" element={<Preparation />} />
+                <Route path="/game" element={<Game />} />
+                <Route path="/after" element={<AfterGame />} />
+                <Route path="/bot-builder" element={<BotBuilder />} />
+                <Route path="/bot-admin" element={<BotManagerPanel />} />
+                <Route path="/sprite-viewer" element={<SpriteDebug />} />
+                <Route path="/map-viewer" element={<MapViewer />} />
+                <Route path="/gameboy" element={<Gameboy />} />
+                <Route path="/translations" element={<TranslationsPage />} />
+              </Routes>
+            </BrowserRouter>
+          </LandscapeGate>
         </Suspense>
       </React.StrictMode>
     </Provider>
