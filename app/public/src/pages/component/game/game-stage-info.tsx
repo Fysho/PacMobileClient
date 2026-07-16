@@ -19,6 +19,11 @@ import { selectSpectatedPlayer, useAppSelector } from "../../../hooks"
 import { getGameScene } from "../../game"
 import { addIconsToDescription } from "../../utils/descriptions"
 import { cc } from "../../utils/jsx"
+import {
+  getMobileClickTooltipProps,
+  getMobileTooltipAnchorProps,
+  useMobileTooltipOutsideClose
+} from "../../utils/toggle"
 import { GameModeIcon } from "../icons/game-mode-icon"
 import SynergyIcon from "../icons/synergy-icon"
 import PokemonPortrait from "../pokemon-portrait"
@@ -230,6 +235,12 @@ export function StagePath() {
   const history = [...(spectatedPlayer?.history ?? [])]
   const phase = useAppSelector((state) => state.game.phase)
   const stageLevel = useAppSelector((state) => state.game.stageLevel)
+  const [openStep, setOpenStep] = React.useState<number | null>(null)
+  useMobileTooltipOutsideClose(
+    openStep === null ? null : `stage-path-${openStep}`,
+    openStep !== null,
+    () => setOpenStep(null)
+  )
   const startStage = min(1)(stageLevel - 3)
   let level = startStage
   let path: PathStep[] = []
@@ -311,6 +322,9 @@ export function StagePath() {
       {path.map((step, i) => (
         <React.Fragment key={"stage-path-" + i}>
           <div
+            {...getMobileTooltipAnchorProps(() =>
+              setOpenStep((currentStep) => (currentStep === i ? null : i))
+            )}
             className={cc("stage-path", {
               current: currentLevelPathIndex === i,
               defeat: step.result === BattleResult.DEFEAT,
@@ -321,6 +335,7 @@ export function StagePath() {
           >
             {ReactDOM.createPortal(
               <Tooltip
+                {...getMobileClickTooltipProps(openStep === i)}
                 id={"stage-path-" + i}
                 className="custom-theme-tooltip"
                 place="bottom"

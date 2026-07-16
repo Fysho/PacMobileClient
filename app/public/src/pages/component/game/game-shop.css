@@ -352,6 +352,39 @@
   }
 }
 
+.mobile-shop-quick-action {
+  position: fixed;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 60px;
+  height: 60px;
+  border: 3px solid #e76e55;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--color-bg-primary) 82%, #e76e55);
+  box-shadow:
+    0 0 0 2px #000,
+    0 3px 10px #000c;
+  pointer-events: none;
+  transition:
+    transform 80ms ease-out,
+    background-color 80ms ease-out,
+    border-color 80ms ease-out;
+}
+
+.mobile-shop-quick-action.active {
+  border-color: #92cc41;
+  background: color-mix(in srgb, var(--color-bg-primary) 65%, #92cc41);
+  transform: scale(1.12);
+}
+
+.mobile-shop-quick-action img {
+  width: 70%;
+  height: 70%;
+  image-rendering: pixelated;
+}
+
 @media (aspect-ratio > 4 / 3) {
   #game-wrapper .game-shop {
     max-height: 20vh;
@@ -376,5 +409,29 @@
 
   .game-pokemons-store {
     gap: 2px;
+  }
+
+  .game-additional-pokemons .grid {
+    grid-template: repeat(4, 54px) / repeat(6, 67.2px);
+    width: 413.2px;
+    height: 222px;
+  }
+
+  .game-regional-pokemons .grid {
+    grid-template-columns: repeat(6, 67.2px);
+    width: 413.2px;
+  }
+
+  .game-additional-pokemons .game-pokemon-portrait,
+  .game-regional-pokemons .game-pokemon-portrait {
+    width: 67.2px;
+    height: 54px;
+    border-width: 1.2px;
+  }
+
+  .game-additional-pokemons .game-pokemon-portrait .synergy-icon,
+  .game-regional-pokemons .game-pokemon-portrait .synergy-icon {
+    width: 14.4px;
+    height: 14.4px;
   }
 }

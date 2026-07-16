@@ -38,6 +38,11 @@ export function getCachedPortrait(
   )
 }
 
+export type MobileQuickActionPointer = {
+  clientX: number
+  clientY: number
+}
+
 export default function GamePokemonPortrait(props: {
   index: number
   origin: "wiki" | "shop" | "proposition" | "team" | "planner" | "battle"
@@ -46,6 +51,16 @@ export default function GamePokemonPortrait(props: {
   onMouseEnter?: React.MouseEventHandler<HTMLDivElement>
   onMouseLeave?: React.MouseEventHandler<HTMLDivElement>
   inPlanner?: boolean
+  onMobileLongPressStart?: (
+    index: number,
+    pointer: MobileQuickActionPointer,
+    sourceRect: DOMRect
+  ) => void
+  onMobileLongPressMove?: (pointer: MobileQuickActionPointer) => void
+  onMobileLongPressEnd?: (
+    pointer: MobileQuickActionPointer,
+    cancelled: boolean
+  ) => void
 }) {
   const pokemon = useMemo(() => {
     if (typeof props.pokemon === "string") {
@@ -74,6 +89,10 @@ export default function GamePokemonPortrait(props: {
   const [countEvol, setCountEvol] = useState(0)
   const touchTooltipTimer = useRef<number | null>(null)
   const touchPointerId = useRef<number | null>(null)
+  const touchPointerPosition = useRef<MobileQuickActionPointer>({
+    clientX: 0,
+    clientY: 0
+  })
   const touchLongPress = useRef(false)
   const suppressTouchClick = useRef(false)
   const [touchTooltipControlled, setTouchTooltipControlled] = useState(false)
@@ -173,7 +192,8 @@ export default function GamePokemonPortrait(props: {
 
   const stopTouchTooltip = (
     event: React.PointerEvent<HTMLDivElement>,
-    suppressClick: boolean
+    suppressClick: boolean,
+    cancelled: boolean
   ) => {
     if (
       event.pointerType === "mouse" ||
@@ -188,6 +208,15 @@ export default function GamePokemonPortrait(props: {
     }
     if (suppressClick && touchLongPress.current) {
       suppressTouchClick.current = true
+    }
+    if (touchLongPress.current) {
+      props.onMobileLongPressEnd?.(
+        {
+          clientX: event.clientX,
+          clientY: event.clientY
+        },
+        cancelled
+      )
     }
     touchLongPress.current = false
     touchPointerId.current = null
@@ -214,6 +243,8 @@ export default function GamePokemonPortrait(props: {
         ) {
           return
         }
+        const pointerId = event.pointerId
+        const anchor = event.currentTarget
         suppressTouchClick.current = false
 
         if (touchTooltipTimer.current !== null) {
@@ -222,24 +253,63 @@ export default function GamePokemonPortrait(props: {
         setTouchTooltipControlled(true)
         setTouchTooltipOpen(false)
         touchLongPress.current = false
-        touchPointerId.current = event.pointerId
-        event.currentTarget.setPointerCapture?.(event.pointerId)
+        touchPointerId.current = pointerId
+        touchPointerPosition.current = {
+          clientX: event.clientX,
+          clientY: event.clientY
+        }
+        anchor.setPointerCapture?.(pointerId)
         touchTooltipTimer.current = window.setTimeout(() => {
-          if (touchPointerId.current === event.pointerId) {
+          if (touchPointerId.current === pointerId) {
             touchLongPress.current = true
             setTouchTooltipOpen(true)
+            if (
+              canBuy &&
+              props.origin === "shop" &&
+              props.onMobileLongPressStart
+            ) {
+              props.onMobileLongPressStart(
+                props.index,
+                touchPointerPosition.current,
+                anchor.getBoundingClientRect()
+              )
+            }
           }
           touchTooltipTimer.current = null
         }, 350)
+      }}
+      onPointerMove={(event) => {
+        if (
+          event.pointerType === "mouse" ||
+          touchPointerId.current !== event.pointerId
+        ) {
+          return
+        }
+        touchPointerPosition.current = {
+          clientX: event.clientX,
+          clientY: event.clientY
+        }
+        if (touchLongPress.current) {
+          props.onMobileLongPressMove?.(touchPointerPosition.current)
+        }
       }}
       onPointerEnter={(event) => {
         if (event.pointerType === "mouse") {
           setTouchTooltipControlled(false)
         }
       }}
-      onPointerUp={(event) => stopTouchTooltip(event, true)}
-      onPointerCancel={(event) => stopTouchTooltip(event, false)}
-      onPointerLeave={(event) => stopTouchTooltip(event, true)}
+      onPointerUp={(event) => stopTouchTooltip(event, true, false)}
+      onPointerCancel={(event) => stopTouchTooltip(event, false, true)}
+      onPointerLeave={(event) => {
+        if (
+          touchLongPress.current &&
+          props.origin === "shop" &&
+          props.onMobileLongPressMove
+        ) {
+          return
+        }
+        stopTouchTooltip(event, true, true)
+      }}
       onClick={(e) => {
         if (suppressTouchClick.current) {
           suppressTouchClick.current = false

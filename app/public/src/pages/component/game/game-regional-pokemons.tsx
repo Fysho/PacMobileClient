@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Tooltip } from "react-tooltip"
 import { RarityColor, RarityCost } from "../../../../../config"
@@ -8,20 +9,32 @@ import {
   selectSpectatedPlayer,
   useAppSelector
 } from "../../../hooks"
+import {
+  getMobileClickTooltipProps,
+  getMobileTooltipAnchorProps,
+  isMobilePointer,
+  useMobileTooltipOutsideClose
+} from "../../utils/toggle"
 import SynergyIcon from "../icons/synergy-icon"
 import { getCachedPortrait } from "./game-pokemon-portrait"
 
 export function GameRegionalPokemonsIcon() {
+  const [isOpen, setIsOpen] = useState(false)
+  useMobileTooltipOutsideClose("game-regional-pokemons", isOpen, () =>
+    setIsOpen(false)
+  )
   return (
     <div className="my-box" style={{ padding: "5px" }}>
       <img
+        {...getMobileTooltipAnchorProps(() => setIsOpen((open) => !open))}
         src={`assets/ui/regional.png`}
         style={{ width: "2em", height: "2em" }}
         data-tooltip-id={"game-regional-pokemons"}
       />
       <Tooltip
+        {...getMobileClickTooltipProps(isOpen)}
         id="game-regional-pokemons"
-        float
+        float={!isMobilePointer()}
         place="top"
         className="custom-theme-tooltip"
       >

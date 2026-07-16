@@ -20,9 +20,9 @@
     opacity: 1 !important;
     position: fixed !important;
     top: 50dvh !important;
-    right: calc(var(--mobile-player-sidebar-width) + 8px) !important;
+    right: auto !important;
     bottom: auto !important;
-    left: auto !important;
+    left: max(8px, env(safe-area-inset-left)) !important;
     width: min(320px, calc(100vw - var(--mobile-player-sidebar-width) - 24px));
     max-height: calc(
       100dvh -

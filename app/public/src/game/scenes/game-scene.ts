@@ -54,6 +54,27 @@ const INVENTORY_ITEM_RADIUS = 30
 const MOBILE_INVENTORY_GAP_PX = 4
 const MAP_EDGE_MIRROR_REFRESH_MS = 100
 const MOBILE_DRAG_DISTANCE_THRESHOLD = 40
+const ITEM_COMBINE_SNAP_RADIUS_MULTIPLIER = 1.75
+const ITEM_COMBINATION_RESULTS = new Map<Item, Map<Item, Item>>()
+
+for (const [result, ingredients] of Object.entries(ItemRecipe)) {
+  const [itemA, itemB] = ingredients
+  if (!itemA || !itemB) continue
+
+  let combinationsForA = ITEM_COMBINATION_RESULTS.get(itemA)
+  if (!combinationsForA) {
+    combinationsForA = new Map<Item, Item>()
+    ITEM_COMBINATION_RESULTS.set(itemA, combinationsForA)
+  }
+  combinationsForA.set(itemB, result as Item)
+
+  let combinationsForB = ITEM_COMBINATION_RESULTS.get(itemB)
+  if (!combinationsForB) {
+    combinationsForB = new Map<Item, Item>()
+    ITEM_COMBINATION_RESULTS.set(itemB, combinationsForB)
+  }
+  combinationsForB.set(itemA, result as Item)
+}
 
 export default class GameScene extends Scene {
   tilemaps: Map<DungeonPMDO, DesignTiled> = new Map<DungeonPMDO, DesignTiled>()
@@ -76,6 +97,7 @@ export default class GameScene extends Scene {
   pokemonDragged: PokemonSprite | null = null
   shopIndexHovered: number | null = null
   itemDragged: ItemContainer | null = null
+  itemCombineTarget: ItemContainer | null = null
   dropSpots: Phaser.GameObjects.Image[] = []
   sellZone: SellZone | undefined
   lastDragDropPokemon: PokemonSprite | undefined
@@ -493,10 +515,82 @@ export default class GameScene extends Scene {
         this.itemDragged.x = this.itemDragged.input.dragStartX
         this.itemDragged.y = this.itemDragged.input.dragStartY
       }
+      this.itemCombineTarget = null
       this.input.emit("dragend", this.input.pointer1, this.itemDragged, false)
       this.itemDragged = null
     }
+    this.itemCombineTarget = null
     this.input.setDragState(this.input.pointer1, 0)
+  }
+
+  private getItemCombineTarget(draggedItem: ItemContainer) {
+    const inventoryItems = this.itemsContainer?.list
+    if (!inventoryItems) return null
+
+    const snapDistance =
+      INVENTORY_ITEM_RADIUS *
+      getInventoryScale(null) *
+      ITEM_COMBINE_SNAP_RADIUS_MULTIPLIER
+    const maximumDistanceSquared = snapDistance * snapDistance
+    let closestDistanceSquared = maximumDistanceSquared
+    let closestTarget: ItemContainer | null = null
+
+    for (const candidate of inventoryItems) {
+      if (
+        !(candidate instanceof ItemContainer) ||
+        candidate === draggedItem ||
+        !ITEM_COMBINATION_RESULTS.get(draggedItem.name)?.has(candidate.name)
+      ) {
+        continue
+      }
+
+      const deltaX = draggedItem.x - candidate.x
+      const deltaY = draggedItem.y - candidate.y
+      const distanceSquared = deltaX * deltaX + deltaY * deltaY
+      if (distanceSquared <= closestDistanceSquared) {
+        closestDistanceSquared = distanceSquared
+        closestTarget = candidate
+      }
+    }
+
+    return closestTarget
+  }
+
+  private updateItemCombineTarget(draggedItem: ItemContainer) {
+    const nextTarget = this.getItemCombineTarget(draggedItem)
+    if (nextTarget === this.itemCombineTarget) return
+
+    draggedItem.closeDetail()
+    this.itemCombineTarget = nextTarget
+    if (!nextTarget) return
+
+    const result = ITEM_COMBINATION_RESULTS.get(draggedItem.name)?.get(
+      nextTarget.name
+    )
+    if (result) {
+      this.itemsContainer?.sendToBack(nextTarget)
+      draggedItem.showTempDetail(result)
+    }
+  }
+
+  private combineInventoryItems(
+    draggedItem: ItemContainer,
+    targetItem: ItemContainer
+  ) {
+    if (!ITEM_COMBINATION_RESULTS.get(draggedItem.name)?.has(targetItem.name)) {
+      return false
+    }
+
+    this.dispatchEvent<IDragDropCombineMessage>(Transfer.DRAG_DROP_COMBINE, {
+      itemA: targetItem.name,
+      itemB: draggedItem.name
+    })
+    return true
+  }
+
+  private clearItemCombineTarget(draggedItem?: ItemContainer) {
+    draggedItem?.closeDetail()
+    this.itemCombineTarget = null
   }
 
   setupMouseEvents() {
@@ -624,6 +718,8 @@ export default class GameScene extends Scene {
           }
         } else if (gameObject instanceof ItemContainer) {
           this.itemDragged = gameObject
+          gameObject.cancelLongPress()
+          this.itemCombineTarget = null
         }
       }
     )
@@ -662,6 +758,8 @@ export default class GameScene extends Scene {
           ) {
             this.sellZone.setVisible(true)
           }
+        } else if (gameObject instanceof ItemContainer) {
+          this.updateItemCombineTarget(gameObject)
         }
       }
     )
@@ -712,15 +810,21 @@ export default class GameScene extends Scene {
           gameObject instanceof ItemContainer &&
           this.itemDragged != null
         ) {
+          const combineTarget =
+            this.itemCombineTarget ??
+            (dropZone instanceof ItemContainer &&
+            ITEM_COMBINATION_RESULTS.get(gameObject.name)?.has(dropZone.name)
+              ? dropZone
+              : null)
           // Item -> Item = COMBINE
           if (dropZone instanceof ItemContainer) {
-            this.dispatchEvent<IDragDropCombineMessage>(
-              Transfer.DRAG_DROP_COMBINE,
-              {
-                itemA: dropZone.name,
-                itemB: gameObject.name
-              }
-            )
+            if (combineTarget) {
+              this.combineInventoryItems(gameObject, combineTarget)
+            }
+            if (gameObject.input) {
+              gameObject.x = gameObject.input.dragStartX
+              gameObject.y = gameObject.input.dragStartY
+            }
           }
           // Item -> POKEMON(board zone) = EQUIP
           else if (
@@ -756,6 +860,7 @@ export default class GameScene extends Scene {
             const player = this.room?.state.players.get(this.uid!)
             if (player) this.itemsContainer?.render(player.items)
           }
+          this.clearItemCombineTarget(gameObject)
           this.itemDragged = null
         }
       },
@@ -763,6 +868,16 @@ export default class GameScene extends Scene {
     )
 
     this.input.on("dragend", (pointer, gameObject, dropped) => {
+      if (
+        gameObject instanceof ItemContainer &&
+        !dropped &&
+        this.itemCombineTarget
+      ) {
+        this.combineInventoryItems(gameObject, this.itemCombineTarget)
+      }
+      if (gameObject instanceof ItemContainer) {
+        this.clearItemCombineTarget(gameObject)
+      }
       this.sellZone?.hide()
       this.dropSpots.forEach((spot) => spot.setVisible(false))
       if (!dropped && gameObject?.input) {
@@ -776,23 +891,6 @@ export default class GameScene extends Scene {
     this.input.on(
       "dragenter",
       (pointer, gameObject, dropZone) => {
-        if (
-          gameObject instanceof ItemContainer &&
-          dropZone instanceof ItemContainer
-        ) {
-          // item dragged above another item: find the resulting item
-          for (const [key, value] of Object.entries(ItemRecipe)) {
-            if (
-              (value[0] == gameObject.name && value[1] == dropZone.name) ||
-              (value[0] == dropZone.name && value[1] == gameObject.name)
-            ) {
-              this.itemsContainer?.sendToBack(dropZone)
-              gameObject.showTempDetail(key as Item)
-              break
-            }
-          }
-        }
-
         if (
           dropZone.name === "board-zone" &&
           gameObject instanceof PokemonSprite
@@ -858,13 +956,6 @@ export default class GameScene extends Scene {
     this.input.on(
       "dragleave",
       (pointer, gameObject, dropZone) => {
-        if (
-          gameObject instanceof ItemContainer &&
-          dropZone instanceof ItemContainer
-        ) {
-          gameObject.closeDetail()
-        }
-
         if (
           dropZone.name === "board-zone" &&
           gameObject instanceof PokemonSprite

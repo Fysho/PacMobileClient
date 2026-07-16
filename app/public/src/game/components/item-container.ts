@@ -240,9 +240,11 @@ export default class ItemContainer extends DraggableObject {
       if (this.tempDetail) {
         this.tempDetail.destroy()
       }
+      this.tempDetail = undefined
       if (this.tempSprite) {
         this.tempSprite.destroy()
       }
+      this.tempSprite = undefined
     }
     this.detail?.setVisible(false)
   }

@@ -1,23 +1,36 @@
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Tooltip } from "react-tooltip"
 import { RarityColor } from "../../../../../config"
 import { getPokemonData } from "../../../../../models/precomputed/precomputed-pokemon-data"
 import { SpecialGameRule } from "../../../../../types/enum/SpecialGameRule"
 import { selectConnectedPlayer, useAppSelector } from "../../../hooks"
+import {
+  getMobileClickTooltipProps,
+  getMobileTooltipAnchorProps,
+  isMobilePointer,
+  useMobileTooltipOutsideClose
+} from "../../utils/toggle"
 import SynergyIcon from "../icons/synergy-icon"
 import { getCachedPortrait } from "./game-pokemon-portrait"
 
 export function GameAdditionalPokemonsIcon() {
+  const [isOpen, setIsOpen] = useState(false)
+  useMobileTooltipOutsideClose("game-additional-pokemons", isOpen, () =>
+    setIsOpen(false)
+  )
   return (
     <div className="my-box" style={{ padding: "5px" }}>
       <img
+        {...getMobileTooltipAnchorProps(() => setIsOpen((open) => !open))}
         src="assets/ui/addpicks.png"
         style={{ width: "2em", height: "2em" }}
         data-tooltip-id={"game-additional-pokemons"}
       />
       <Tooltip
+        {...getMobileClickTooltipProps(isOpen)}
         id="game-additional-pokemons"
-        float
+        float={!isMobilePointer()}
         place="top"
         className="custom-theme-tooltip"
       >

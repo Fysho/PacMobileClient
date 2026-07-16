@@ -67,8 +67,8 @@
     position: relative;
     top: auto !important;
     right: auto;
-    width: clamp(38px, 10.5dvh, 44px);
-    height: clamp(38px, 10.5dvh, 44px);
+    width: clamp(30px, 8.4dvh, 35px);
+    height: clamp(30px, 8.4dvh, 35px);
     pointer-events: auto;
   }
 

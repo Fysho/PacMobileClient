@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Tooltip } from "react-tooltip"
 import {
@@ -7,10 +8,19 @@ import {
 } from "../../../../../config"
 import { Rarity } from "../../../../../types/enum/Game"
 import { useAppSelector } from "../../../hooks"
+import {
+  getMobileClickTooltipProps,
+  getMobileTooltipAnchorProps,
+  useMobileTooltipOutsideClose
+} from "../../utils/toggle"
 
 export default function GameRarityPercentage() {
   const { t } = useTranslation()
   const level = useAppSelector((state) => state.game.experienceManager.level)
+  const [isOpen, setIsOpen] = useState(false)
+  useMobileTooltipOutsideClose("detail-game-rarity-percentage", isOpen, () =>
+    setIsOpen(false)
+  )
   const RarityTiers = [
     Rarity.COMMON,
     Rarity.UNCOMMON,
@@ -21,6 +31,7 @@ export default function GameRarityPercentage() {
   return (
     <>
       <Tooltip
+        {...getMobileClickTooltipProps(isOpen)}
         id="detail-game-rarity-percentage"
         className="custom-theme-tooltip"
         place="top"
@@ -66,6 +77,7 @@ export default function GameRarityPercentage() {
         <p className="help">{t("increase_level_hint")}</p>
       </Tooltip>
       <div
+        {...getMobileTooltipAnchorProps(() => setIsOpen((open) => !open))}
         className="my-box game-rarity-percentage"
         data-tooltip-id="detail-game-rarity-percentage"
       >
