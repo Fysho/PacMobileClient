@@ -381,15 +381,23 @@ export class GamePokemonDetailDOMWrapper extends GameObjects.DOMElement {
   ) {
     super(scene, x, y)
     this.dom = document.createElement("div")
-    this.dom.className = "my-container game-pokemon-detail-tooltip"
+    this.dom.className =
+      "my-container game-pokemon-detail-tooltip board-pokemon-detail-panel"
     this.setElement(this.dom)
     this.root = ReactDOM.createRoot(this.dom)
     this.pokemon = pokemon
     this.shiny = shiny
     this.emotion = emotion
     this.origin = origin
+
     this.isAlly = isAlly
     this.render()
+  }
+
+  public dockForMobile() {
+    if (window.matchMedia("(hover: none) and (pointer: coarse)").matches) {
+      document.getElementById("game-wrapper")?.appendChild(this.dom)
+    }
   }
 
   private render() {

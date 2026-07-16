@@ -13,6 +13,31 @@
   padding: 5px;
 }
 
+@media (hover: none) and (pointer: coarse) {
+  .my-container.game-pokemon-detail-tooltip.board-pokemon-detail-panel {
+    display: block !important;
+    z-index: 75 !important;
+    opacity: 1 !important;
+    position: fixed !important;
+    top: 50dvh !important;
+    right: calc(var(--mobile-player-sidebar-width) + 8px) !important;
+    bottom: auto !important;
+    left: auto !important;
+    width: min(320px, calc(100vw - var(--mobile-player-sidebar-width) - 24px));
+    max-height: calc(
+      100dvh -
+      128px -
+      env(safe-area-inset-top) -
+      env(safe-area-inset-bottom)
+    );
+    overflow-x: hidden;
+    overflow-y: auto;
+    transform: translateY(-50%) !important;
+    pointer-events: auto !important;
+    touch-action: pan-y;
+  }
+}
+
 .game-pokemon-detail p {
   margin: 0;
 }

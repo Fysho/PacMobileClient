@@ -181,10 +181,6 @@ p:last-child {
     left: 0;
     width: 100vw;
   }
-
-  #root #game {
-    width: calc(100vw - var(--mobile-player-sidebar-width));
-  }
 }
 
 #game-wrapper .ps-sidebar-root {

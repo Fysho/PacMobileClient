@@ -407,7 +407,7 @@ export default class PokemonSprite extends DraggableObject {
       this.scene.lastPokemonDetail = null
     }
 
-    this.detail = new GamePokemonDetailDOMWrapper(
+    const detail = new GamePokemonDetailDOMWrapper(
       this.scene,
       0,
       0,
@@ -415,10 +415,12 @@ export default class PokemonSprite extends DraggableObject {
       this.inBattle ? "battle" : "team",
       this.playerId === this.scene.uid
     )
-    this.detail.setDepth(DEPTH.TOOLTIP).setOrigin(0, 0)
+    this.detail = detail
+    detail.setDepth(DEPTH.TOOLTIP).setOrigin(0, 0)
     this.updateTooltipPosition()
-    this.detail.removeInteractive()
-    this.add(this.detail)
+    detail.removeInteractive()
+    this.add(detail)
+    detail.dockForMobile()
     this.scene.lastPokemonDetail = this
   }
 
