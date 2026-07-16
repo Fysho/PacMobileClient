@@ -117,3 +117,34 @@
   width: 20px;
   height: 20px;
 }
+
+@media (hover: none) and (pointer: coarse) {
+  .item-detail-tooltip.inventory-item-detail-panel {
+    position: fixed !important;
+    top: 50dvh !important;
+    right: calc(var(--mobile-player-sidebar-width) + 8px) !important;
+    bottom: auto !important;
+    left: auto !important;
+    width: min(380px, calc(100vw - var(--mobile-player-sidebar-width) - 24px));
+    min-width: 0;
+    max-width: none;
+    max-height: calc(
+      100dvh -
+      96px -
+      env(safe-area-inset-top) -
+      env(safe-area-inset-bottom)
+    );
+    overflow-x: hidden;
+    overflow-y: auto;
+    opacity: 1 !important;
+    pointer-events: none;
+    transform: translateY(-50%) !important;
+    z-index: 75 !important;
+  }
+
+  .inventory-item-detail-panel .game-item-detail {
+    min-width: 0;
+    max-width: none;
+    font-size: 0.9rem;
+  }
+}

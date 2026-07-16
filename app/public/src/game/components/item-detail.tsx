@@ -20,6 +20,8 @@ import { addIconsToDescription } from "../../pages/utils/descriptions"
 import "./item-detail.css"
 import { entries } from "../../../../utils/object"
 
+const MOBILE_POINTER_QUERY = "(hover: none) and (pointer: coarse)"
+
 export function ItemDetailTooltipContent({
   item,
   showItemCombinationsTooltip = true
@@ -165,5 +167,15 @@ export default class ItemDetail extends GameObjects.DOMElement {
     this.setElement(this.dom)
     const root = ReactDOM.createRoot(this.dom)
     root.render(<ItemDetailTooltipContent item={name} />)
+  }
+
+  dockForMobile() {
+    if (!window.matchMedia(MOBILE_POINTER_QUERY).matches) return
+
+    const gameWrapper = document.getElementById("game-wrapper")
+    if (!gameWrapper) return
+
+    this.dom.classList.add("inventory-item-detail-panel")
+    gameWrapper.appendChild(this.dom)
   }
 }

@@ -79,7 +79,7 @@ export default function Auth() {
       )}
       <img className="logo" src="assets/ui/pokemon_autochess_final.svg" />
       <header>
-        <h1>{t("auth.pokemon_auto_chess")}</h1>
+        <h1>{t("auth.pokemon_auto_chess")} Mobile</h1>
         <div className="disclaimer">
           <p>{t("auth.nintendo_warning")}</p>
         </div>

@@ -53,6 +53,7 @@ export default function GameDpsMeter() {
       initialPosition={dpsMeterPosition}
       onToggleMinimize={(minimized) => setShowDpsMeter(!minimized)}
       onMove={(position) => setDpsMeterPosition(position)}
+      constrainAboveShop
     >
       <header>
         <div>

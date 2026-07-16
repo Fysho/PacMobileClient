@@ -1,5 +1,4 @@
-import type Phaser from "phaser"
-import { GameObjects } from "phaser"
+import Phaser, { GameObjects } from "phaser"
 import {
   Berries,
   Dishes,
@@ -21,6 +20,8 @@ import ItemDetail from "./item-detail"
 
 const MOBILE_POINTER_QUERY = "(hover: none) and (pointer: coarse)"
 const MOBILE_INVENTORY_SCALE = 1.3
+const MOBILE_ITEM_LONG_PRESS_DISTANCE = 24
+const MOBILE_ITEM_LONG_PRESS_DELAY_MS = 500
 
 export const isCoarsePointer = () =>
   window.matchMedia(MOBILE_POINTER_QUERY).matches
@@ -41,6 +42,7 @@ export default class ItemContainer extends DraggableObject {
   playerId: string
   mouseoutTimeout: NodeJS.Timeout | null = null
   displayScale: number
+  private longPressTimer?: Phaser.Time.TimerEvent
 
   constructor(
     scene: GameScene,
@@ -103,6 +105,11 @@ export default class ItemContainer extends DraggableObject {
     }
   }
 
+  cancelLongPress() {
+    this.longPressTimer?.remove(false)
+    this.longPressTimer = undefined
+  }
+
   onPointerOver(pointer) {
     super.onPointerOver(pointer)
     if (preference("showDetailsOnHover") && !this.detail?.visible) {
@@ -115,8 +122,9 @@ export default class ItemContainer extends DraggableObject {
     }
   }
 
-  onPointerOut() {
-    super.onPointerOut()
+  onPointerOut(pointer?: Phaser.Input.Pointer) {
+    if (!pointer?.wasTouch || !pointer.isDown) this.cancelLongPress()
+    super.onPointerOut(pointer)
     if (!this.dragDisabled) {
       this.updateDropZone(true)
     }
@@ -142,6 +150,7 @@ export default class ItemContainer extends DraggableObject {
     super.onPointerDown(pointer, event)
     this.parentContainer.bringToTop(this)
     event.stopPropagation()
+    this.cancelLongPress()
     if (pointer.rightButtonDown() && !preference("showDetailsOnHover")) {
       if (!this.detail?.visible) {
         this.openDetail()
@@ -151,9 +160,38 @@ export default class ItemContainer extends DraggableObject {
         this.updateDropZone(true)
       }
     }
+    if (
+      this.pokemonId === null &&
+      this.draggable &&
+      pointer.wasTouch &&
+      pointer.leftButtonDown()
+    ) {
+      const startX = pointer.x
+      const startY = pointer.y
+      this.longPressTimer = this.scene.time.delayedCall(
+        MOBILE_ITEM_LONG_PRESS_DELAY_MS,
+        () => {
+          this.longPressTimer = undefined
+          const distance = Phaser.Math.Distance.Between(
+            startX,
+            startY,
+            pointer.x,
+            pointer.y
+          )
+          if (
+            pointer.isDown &&
+            distance <= MOBILE_ITEM_LONG_PRESS_DISTANCE &&
+            !this.detail?.visible
+          ) {
+            this.openDetail()
+          }
+        }
+      )
+    }
   }
 
   onPointerUp() {
+    this.cancelLongPress()
     super.onPointerUp()
     this.updateDropZone(false)
     if (isCoarsePointer() && this.detail?.visible) {
@@ -191,7 +229,7 @@ export default class ItemContainer extends DraggableObject {
 
         this.add(this.detail)
       }
-
+      this.detail.dockForMobile()
       this.detail.setVisible(true)
     }
   }
@@ -257,6 +295,7 @@ export default class ItemContainer extends DraggableObject {
   }
 
   destroy(fromScene?: boolean | undefined): void {
+    this.cancelLongPress()
     super.destroy(fromScene)
     this.closeDetail()
   }

@@ -1,4 +1,8 @@
-import { useEffect, useState } from "react"
+import {
+  type PointerEvent as ReactPointerEvent,
+  useEffect,
+  useState
+} from "react"
 import { useTranslation } from "react-i18next"
 import type { PlayerChoice } from "../../../../../models/colyseus-models/player-choice"
 import { type Item, ShinyItems } from "../../../../../types/enum/Item"
@@ -24,6 +28,11 @@ import "./game-choice.css"
 
 function isPokemonChoice(choice: PlayerChoice): boolean {
   return choice.pokemons.length > 0
+}
+
+function isolateChoicePointer(event: ReactPointerEvent<HTMLDivElement>) {
+  event.stopPropagation()
+  event.nativeEvent.stopImmediatePropagation()
 }
 
 export default function GameChoice() {
@@ -97,7 +106,13 @@ export default function GameChoice() {
   }
 
   return (
-    <div className="game-choice" style={{ zIndex: DEPTH.MODAL }}>
+    <div
+      className="game-choice"
+      style={{ zIndex: DEPTH.MODAL }}
+      onPointerDown={isolateChoicePointer}
+      onPointerUp={isolateChoicePointer}
+      onPointerCancel={isolateChoicePointer}
+    >
       <div
         className="my-container"
         style={{ visibility: visible ? "visible" : "hidden" }}

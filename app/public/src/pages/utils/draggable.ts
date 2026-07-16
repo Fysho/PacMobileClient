@@ -13,6 +13,34 @@ const getMaximumRight = () =>
   document.getElementById("game")?.getBoundingClientRect().right ??
   window.innerWidth
 
+const getVisibleHeight = (
+  container: HTMLElement | null,
+  fallbackHeight: number,
+  visibleHandleSelector?: string
+) =>
+  (visibleHandleSelector
+    ? container
+        ?.querySelector<HTMLElement>(visibleHandleSelector)
+        ?.getBoundingClientRect().height
+    : undefined) ?? fallbackHeight
+
+const getMaximumTop = (
+  margin: number,
+  visibleHeight: number,
+  bottomBoundarySelector?: string
+) => {
+  const boundaryRect = bottomBoundarySelector
+    ? document
+        .querySelector<HTMLElement>(bottomBoundarySelector)
+        ?.getBoundingClientRect()
+    : undefined
+  const maximumBottom =
+    boundaryRect && boundaryRect.height > 0
+      ? boundaryRect.top
+      : window.innerHeight
+  return maximumBottom - margin - visibleHeight
+}
+
 interface Position {
   x: number
   y: number
@@ -22,6 +50,8 @@ interface UseDraggableOptions {
   initialPosition?: Position
   containerRef?: RefObject<HTMLElement>
   margin?: number // margin from viewport edges in pixels
+  bottomBoundarySelector?: string
+  visibleHandleSelector?: string
 }
 
 interface UseDraggableReturn {
@@ -34,7 +64,12 @@ interface UseDraggableReturn {
 export function useDraggable(
   options: UseDraggableOptions = {}
 ): UseDraggableReturn {
-  const { initialPosition = { x: 0, y: 0 }, margin = 40 } = options
+  const {
+    initialPosition = { x: 0, y: 0 },
+    margin = 40,
+    bottomBoundarySelector,
+    visibleHandleSelector
+  } = options
 
   const [position, setPosition] = useState<Position>(initialPosition)
   const [isDragging, setIsDragging] = useState(false)
@@ -47,7 +82,8 @@ export function useDraggable(
     startLeft: 0,
     startTop: 0,
     width: 0,
-    height: 0
+    height: 0,
+    visibleHeight: 0
   })
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -62,7 +98,11 @@ export function useDraggable(
         const proposedLeft = dragRef.current.startLeft + dx
         const proposedTop = dragRef.current.startTop + dy
         const maxLeft = getMaximumRight() - margin - dragRef.current.width
-        const maxTop = window.innerHeight - margin - dragRef.current.height
+        const maxTop = getMaximumTop(
+          margin,
+          dragRef.current.visibleHeight,
+          bottomBoundarySelector
+        )
         const clampedLeft = clamp(
           proposedLeft,
           getMinimumLeft(margin),
@@ -99,7 +139,7 @@ export function useDraggable(
         window.removeEventListener("pointercancel", stopDragging)
       }
     }
-  }, [isDragging, margin])
+  }, [bottomBoundarySelector, isDragging, margin])
 
   // Clamp position on mount and on resize to ensure it's always on-screen
   useEffect(() => {
@@ -108,7 +148,11 @@ export function useDraggable(
       const width = rect?.width ?? 0
       const height = rect?.height ?? 0
       const maxLeft = getMaximumRight() - margin - width
-      const maxTop = window.innerHeight - margin - height
+      const maxTop = getMaximumTop(
+        margin,
+        getVisibleHeight(containerRef.current, height, visibleHandleSelector),
+        bottomBoundarySelector
+      )
       // Derive current rect left/top from current transform position
       const currentLeft = rect?.left ?? 0
       const currentTop = rect?.top ?? 0
@@ -129,7 +173,7 @@ export function useDraggable(
     const onResize = () => clampCurrentPosition()
     window.addEventListener("resize", onResize)
     return () => window.removeEventListener("resize", onResize)
-  }, [margin])
+  }, [bottomBoundarySelector, margin, visibleHandleSelector])
 
   const handlePointerDown = (
     e: React.PointerEvent,
@@ -158,7 +202,12 @@ export function useDraggable(
       startLeft: rect?.left ?? 0,
       startTop: rect?.top ?? 0,
       width: rect?.width ?? 0,
-      height: rect?.height ?? 0
+      height: rect?.height ?? 0,
+      visibleHeight: getVisibleHeight(
+        containerRef.current,
+        rect?.height ?? 0,
+        visibleHandleSelector
+      )
     }
   }
 

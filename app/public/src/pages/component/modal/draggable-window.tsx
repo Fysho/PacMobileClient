@@ -15,6 +15,7 @@ interface DraggableWindowProps {
   maximizeButtonTitle?: string
   onToggleMinimize?: (minimized: boolean) => void
   onMove?: (position: { x: number; y: number }) => void
+  constrainAboveShop?: boolean
 }
 
 export default function DraggableWindow({
@@ -27,13 +28,18 @@ export default function DraggableWindow({
   minimizeButtonTitle = t("minimize"),
   maximizeButtonTitle = t("maximize"),
   onToggleMinimize,
+  constrainAboveShop = false,
   onMove
 }: DraggableWindowProps) {
   const [isMinimized, setMinimized] = useState(defaultMinimized)
   const { position, isDragging, handlePointerDown, containerRef } =
     useDraggable({
       initialPosition,
-      margin: 8
+      margin: 8,
+      bottomBoundarySelector: constrainAboveShop ? ".game-shop" : undefined,
+      visibleHandleSelector: constrainAboveShop
+        ? ".draggable-window-header"
+        : undefined
     })
   useEffect(() => {
     onToggleMinimize?.(isMinimized)

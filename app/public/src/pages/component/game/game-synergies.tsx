@@ -18,6 +18,7 @@ export default function GameSynergies() {
       initialPosition={synergiesPosition}
       onMove={(position) => setSynergiesPosition(position)}
       style={{ zIndex: DEPTH.SYNERGIES_CONTAINER }}
+      constrainAboveShop
     >
       <Synergies synergies={synergies} tooltipPortal={true} />
     </DraggableWindow>
