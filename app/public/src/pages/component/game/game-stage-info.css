@@ -148,10 +148,10 @@
     overflow: hidden;
     border: 0;
     border-radius: 0;
-    background-color: rgba(27, 33, 48, 0.36);
-    background-color: var(--mobile-hud-background);
-    -webkit-backdrop-filter: blur(6px);
-    backdrop-filter: blur(6px);
+    background-color: transparent !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: none;
     font-size: 0.75rem;
     line-height: 1;
     text-shadow: 0 1px 2px black;

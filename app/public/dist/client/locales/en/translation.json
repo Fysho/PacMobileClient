@@ -4036,6 +4036,7 @@
 		}
 	},
 	"theme": {
+		"pasdefault": "PAS Default",
 		"default": "Classic",
 		"super": "Super",
 		"autumn": "Autumn",

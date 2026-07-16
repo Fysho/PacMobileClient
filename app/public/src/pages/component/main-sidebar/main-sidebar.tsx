@@ -58,7 +58,6 @@ export function MainSidebar(props: MainSidebarProps) {
     []
   )
   const sidebarRef = useRef<HTMLHtmlElement>(null)
-  const swipeStart = useRef<{ x: number; y: number } | null>(null)
 
   const { t } = useTranslation()
   const profile = useAppSelector((state) => state.network.profile)
@@ -108,68 +107,6 @@ export function MainSidebar(props: MainSidebarProps) {
     return () =>
       window.removeEventListener(MOBILE_SIDEBAR_CLOSE_EVENT, handleCloseRequest)
   }, [page])
-
-  useEffect(() => {
-    if (page !== "game" || !window.matchMedia(MOBILE_POINTER_QUERY).matches) {
-      return
-    }
-
-    const handlePointerDown = (event: PointerEvent) => {
-      const startedOnSidebar = sidebarRef.current?.contains(
-        event.target as Node
-      )
-      if (
-        event.pointerType === "touch" &&
-        ((collapsed && event.clientX <= 32) || (!collapsed && startedOnSidebar))
-      ) {
-        swipeStart.current = { x: event.clientX, y: event.clientY }
-      }
-    }
-    const handlePointerMove = (event: PointerEvent) => {
-      const start = swipeStart.current
-      if (!start) {
-        return
-      }
-
-      const deltaX = event.clientX - start.x
-      const deltaY = event.clientY - start.y
-      if (Math.abs(deltaY) > 24 && Math.abs(deltaY) > Math.abs(deltaX)) {
-        swipeStart.current = null
-      } else if (
-        collapsed &&
-        deltaX >= 56 &&
-        deltaX > Math.abs(deltaY) * 1.25
-      ) {
-        event.preventDefault()
-        swipeStart.current = null
-        setCollapsed(false)
-      } else if (
-        !collapsed &&
-        deltaX <= -56 &&
-        Math.abs(deltaX) > Math.abs(deltaY) * 1.25
-      ) {
-        event.preventDefault()
-        swipeStart.current = null
-        closeSidebar()
-      }
-    }
-    const clearSwipe = () => {
-      swipeStart.current = null
-    }
-
-    window.addEventListener("pointerdown", handlePointerDown)
-    window.addEventListener("pointermove", handlePointerMove, {
-      passive: false
-    })
-    window.addEventListener("pointerup", clearSwipe)
-    window.addEventListener("pointercancel", clearSwipe)
-    return () => {
-      window.removeEventListener("pointerdown", handlePointerDown)
-      window.removeEventListener("pointermove", handlePointerMove)
-      window.removeEventListener("pointerup", clearSwipe)
-      window.removeEventListener("pointercancel", clearSwipe)
-    }
-  }, [closeSidebar, collapsed, page])
 
   useEffect(() => {
     const handleKeydown = (e: KeyboardEvent) => {
@@ -234,6 +171,16 @@ export function MainSidebar(props: MainSidebarProps) {
 
   return (
     <>
+      {page === "game" && collapsed && (
+        <button
+          type="button"
+          className="mobile-sidebar-toggle"
+          aria-label={t("open", { defaultValue: "Open menu" })}
+          onClick={() => setCollapsed(false)}
+        >
+          <img src="assets/ui/colyseus-icon.png" alt="" />
+        </button>
+      )}
       {page === "game" && !collapsed && (
         <button
           type="button"

@@ -4,6 +4,7 @@ import { invertKeysValues, values } from "../../utils/object"
 import { GADGETS } from "./gadgets"
 
 export const THEMES = [
+  "pasdefault",
   "default",
   "super",
   "lilac",
@@ -20,6 +21,7 @@ export const THEMES = [
 export type Theme = (typeof THEMES)[number]
 
 export const VIDEO_BG_THEMES: Theme[] = [
+  "pasdefault",
   "umbra",
   "autumn",
   "redsea",

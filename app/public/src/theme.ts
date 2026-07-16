@@ -3,6 +3,17 @@ import { subscribeToPreference } from "./preferences"
 
 const THEME_LINK_ID = "pac-theme"
 
+function addVideoBackground(theme: string) {
+  const videoElement = document.createElement("video")
+  videoElement.id = "videobg"
+  videoElement.src = `/assets/theme/${theme}/videobg.mp4`
+  videoElement.autoplay = true
+  videoElement.muted = true
+  videoElement.loop = true
+  videoElement.playsInline = true
+  document.body.prepend(videoElement)
+}
+
 export function applyTheme(theme: string) {
   document.getElementById("videobg")?.remove()
   let link = document.getElementById(THEME_LINK_ID) as HTMLLinkElement | null
@@ -18,14 +29,8 @@ export function applyTheme(theme: string) {
   }
   link.href = `themes/${theme}.css`
 
-  if (VIDEO_BG_THEMES.includes(theme as any)) {
-    const videoElement = document.createElement("video")
-    videoElement.id = "videobg"
-    videoElement.src = `/assets/theme/${theme}/videobg.mp4`
-    videoElement.autoplay = true
-    videoElement.muted = true
-    videoElement.loop = true
-    document.body.prepend(videoElement)
+  if (VIDEO_BG_THEMES.some((videoTheme) => videoTheme === theme)) {
+    addVideoBackground(theme === "pasdefault" ? "default" : theme)
   }
 }
 
