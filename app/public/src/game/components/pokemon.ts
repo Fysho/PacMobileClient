@@ -402,7 +402,7 @@ export default class PokemonSprite extends DraggableObject {
     }
   }
 
-  openDetail() {
+  openDetail(placeOnMobileRight = false) {
     if (!isGameScene(this.scene)) return
     this.scene.closeTooltips()
     if (this.scene.lastPokemonDetail && this.scene.lastPokemonDetail !== this) {
@@ -422,7 +422,7 @@ export default class PokemonSprite extends DraggableObject {
     this.updateTooltipPosition()
     detail.removeInteractive()
     this.add(detail)
-    detail.dockForMobile()
+    detail.dockForMobile(placeOnMobileRight)
     this.scene.lastPokemonDetail = this
   }
 
@@ -468,7 +468,7 @@ export default class PokemonSprite extends DraggableObject {
           distance <= MOBILE_LONG_PRESS_MAX_DISTANCE &&
           !this.detail
         ) {
-          this.openDetail()
+          this.openDetail(pointer.x < this.scene.scale.width / 2)
           this.detailOpenedByLongPress = this.detail != null
         }
       })

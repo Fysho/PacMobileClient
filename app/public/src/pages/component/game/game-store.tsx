@@ -15,7 +15,10 @@ import GamePokemonPortrait from "./game-pokemon-portrait"
 const QUICK_ACTION_SIZE = 60
 const QUICK_ACTION_MARGIN = 8
 
+type ShopQuickActionSide = "left" | "right"
+
 type ShopQuickActionTarget = {
+  side: ShopQuickActionSide
   index: number
   left: number
   top: number
@@ -34,22 +37,11 @@ function isInsideQuickAction(
   )
 }
 
-function overlapsQuickAction(
-  target: Pick<ShopQuickActionTarget, "left" | "top">,
-  occupiedRect: DOMRect
-) {
-  return (
-    target.left < occupiedRect.right + QUICK_ACTION_MARGIN &&
-    target.left + QUICK_ACTION_SIZE > occupiedRect.left - QUICK_ACTION_MARGIN &&
-    target.top < occupiedRect.bottom + QUICK_ACTION_MARGIN &&
-    target.top + QUICK_ACTION_SIZE > occupiedRect.top - QUICK_ACTION_MARGIN
-  )
+function clamp(value: number, minimum: number, maximum: number) {
+  return Math.min(maximum, Math.max(minimum, value))
 }
 
-function getQuickActionPosition(
-  sourceRect: DOMRect,
-  occupiedRects: DOMRect[] = []
-) {
+function getQuickActionPositions(detailRect?: DOMRect) {
   const topHudBottom =
     document.getElementById("game-stage-info")?.getBoundingClientRect()
       .bottom ?? 0
@@ -60,45 +52,41 @@ function getQuickActionPosition(
   const playerRailLeft =
     document.getElementById("game-players")?.getBoundingClientRect().left ??
     window.innerWidth
-  const left = Math.max(QUICK_ACTION_MARGIN, shopRect?.left ?? 0)
-  const right = Math.max(
-    left,
+  const leftBound = Math.max(QUICK_ACTION_MARGIN, shopRect?.left ?? 0)
+  const rightBound = Math.max(
+    leftBound,
     playerRailLeft - QUICK_ACTION_SIZE - QUICK_ACTION_MARGIN
   )
-  const top = Math.min(
+  const topBound = Math.min(
     window.innerHeight - QUICK_ACTION_SIZE - QUICK_ACTION_MARGIN,
     Math.max(QUICK_ACTION_MARGIN, topHudBottom + QUICK_ACTION_MARGIN)
   )
-  const bottom = Math.max(
-    top,
+  const bottomBound = Math.max(
+    topBound,
     shopTop - QUICK_ACTION_SIZE - QUICK_ACTION_MARGIN
   )
-  const sourceCenterX = sourceRect.left + sourceRect.width / 2
-  const sourceCenterY = sourceRect.top + sourceRect.height / 2
-  const candidates = [
-    { left, top },
-    { left: right, top },
-    { left, top: bottom },
-    { left: right, top: bottom }
-  ].sort((candidateA, candidateB) => {
-    const deltaAX = candidateA.left + QUICK_ACTION_SIZE / 2 - sourceCenterX
-    const deltaAY = candidateA.top + QUICK_ACTION_SIZE / 2 - sourceCenterY
-    const deltaBX = candidateB.left + QUICK_ACTION_SIZE / 2 - sourceCenterX
-    const deltaBY = candidateB.top + QUICK_ACTION_SIZE / 2 - sourceCenterY
-    return (
-      deltaAX * deltaAX +
-      deltaAY * deltaAY -
-      (deltaBX * deltaBX + deltaBY * deltaBY)
-    )
-  })
-
-  return (
-    candidates.find((candidate) =>
-      occupiedRects.every(
-        (occupiedRect) => !overlapsQuickAction(candidate, occupiedRect)
+  const top = detailRect
+    ? clamp(
+        detailRect.top + detailRect.height / 2 - QUICK_ACTION_SIZE / 2,
+        topBound,
+        bottomBound
       )
-    ) ?? candidates[candidates.length - 1]
-  )
+    : clamp((topBound + bottomBound) / 2, topBound, bottomBound)
+  const left = detailRect
+    ? clamp(
+        detailRect.left - QUICK_ACTION_SIZE - QUICK_ACTION_MARGIN,
+        leftBound,
+        rightBound
+      )
+    : leftBound
+  const right = detailRect
+    ? clamp(detailRect.right + QUICK_ACTION_MARGIN, leftBound, rightBound)
+    : rightBound
+
+  return [
+    { side: "left" as const, left, top },
+    { side: "right" as const, left: right, top }
+  ]
 }
 
 export default function GameStore() {
@@ -107,9 +95,10 @@ export default function GameStore() {
   const [teamPlanner, setTeamPlanner] = useState<IDetailledPokemon[]>(
     localStore.get(LocalStoreKeys.TEAM_PLANNER)
   )
-  const [quickActionTarget, setQuickActionTarget] =
-    useState<ShopQuickActionTarget | null>(null)
-  const quickActionTargetRef = useRef<ShopQuickActionTarget | null>(null)
+  const [quickActionTargets, setQuickActionTargets] = useState<
+    ShopQuickActionTarget[]
+  >([])
+  const quickActionTargetsRef = useRef<ShopQuickActionTarget[]>([])
   const quickActionPointerRef = useRef<MobileQuickActionPointer>({
     clientX: 0,
     clientY: 0
@@ -141,71 +130,81 @@ export default function GameStore() {
 
   const scene = getGameScene()
 
-  const updateQuickActionTarget = (target: ShopQuickActionTarget | null) => {
-    quickActionTargetRef.current = target
-    setQuickActionTarget(target)
+  const updateQuickActionTargets = (targets: ShopQuickActionTarget[]) => {
+    quickActionTargetsRef.current = targets
+    setQuickActionTargets(targets)
   }
 
   const startQuickAction = (
     index: number,
-    pointer: MobileQuickActionPointer,
-    sourceRect: DOMRect
+    pointer: MobileQuickActionPointer
   ) => {
     quickActionPointerRef.current = pointer
-    const position = getQuickActionPosition(sourceRect)
-    updateQuickActionTarget({
-      index,
-      ...position,
-      active: false
-    })
+    updateQuickActionTargets(
+      getQuickActionPositions().map((position) => ({
+        index,
+        ...position,
+        active: false
+      }))
+    )
 
     if (quickActionPlacementTimer.current !== null) {
       window.clearTimeout(quickActionPlacementTimer.current)
     }
     quickActionPlacementTimer.current = window.setTimeout(() => {
       quickActionPlacementTimer.current = null
-      if (quickActionTargetRef.current?.index !== index) return
-
-      const visibleDetailRects = Array.from(
-        document.querySelectorAll<HTMLElement>(
-          ".react-tooltip.game-pokemon-detail-tooltip"
-        )
-      )
-        .filter((tooltip) => {
-          const style = window.getComputedStyle(tooltip)
-          return (
-            style.display !== "none" &&
-            (style.opacity !== "0" ||
-              tooltip.classList.contains("react-tooltip__show"))
-          )
-        })
-        .map((tooltip) => tooltip.getBoundingClientRect())
-        .filter((rect) => rect.width > 0 && rect.height > 0)
-      const adjustedPosition = getQuickActionPosition(
-        sourceRect,
-        visibleDetailRects
-      )
-      const adjustedTarget = {
-        index,
-        ...adjustedPosition,
-        active: false
+      if (
+        !quickActionTargetsRef.current.some((target) => target.index === index)
+      ) {
+        return
       }
-      adjustedTarget.active = isInsideQuickAction(
-        quickActionPointerRef.current,
-        adjustedTarget
+
+      const tooltip = document.getElementById(`tooltip-shop-${index}`)
+      const style = tooltip ? window.getComputedStyle(tooltip) : null
+      const detailRect =
+        tooltip &&
+        style?.display !== "none" &&
+        (style?.opacity !== "0" ||
+          tooltip.classList.contains("react-tooltip__show"))
+          ? tooltip.getBoundingClientRect()
+          : undefined
+      const adjustedTargets = getQuickActionPositions(detailRect).map(
+        (position) => {
+          const target = {
+            index,
+            ...position,
+            active: false
+          }
+          target.active = isInsideQuickAction(
+            quickActionPointerRef.current,
+            target
+          )
+          return target
+        }
       )
-      updateQuickActionTarget(adjustedTarget)
+      updateQuickActionTargets(adjustedTargets)
     }, 80)
   }
 
   const moveQuickAction = (pointer: MobileQuickActionPointer) => {
     quickActionPointerRef.current = pointer
-    const currentTarget = quickActionTargetRef.current
-    if (!currentTarget) return
+    const currentTargets = quickActionTargetsRef.current
+    if (currentTargets.length === 0) return
 
-    const active = isInsideQuickAction(pointer, currentTarget)
-    if (active !== currentTarget.active) {
-      updateQuickActionTarget({ ...currentTarget, active })
+    const activeSide = currentTargets.find((target) =>
+      isInsideQuickAction(pointer, target)
+    )?.side
+    if (
+      currentTargets.some(
+        (target) => target.active !== (target.side === activeSide)
+      )
+    ) {
+      updateQuickActionTargets(
+        currentTargets.map((target) => ({
+          ...target,
+          active: target.side === activeSide
+        }))
+      )
     }
   }
 
@@ -217,9 +216,11 @@ export default function GameStore() {
       window.clearTimeout(quickActionPlacementTimer.current)
       quickActionPlacementTimer.current = null
     }
-    const target = quickActionTargetRef.current
-    updateQuickActionTarget(null)
-    if (!target || cancelled || !isInsideQuickAction(pointer, target)) return
+    const target = quickActionTargetsRef.current.find((candidate) =>
+      isInsideQuickAction(pointer, candidate)
+    )
+    updateQuickActionTargets([])
+    if (!target || cancelled) return
 
     playSound(SOUNDS.BUTTON_CLICK)
     scene?.removeFromShop(target.index)
@@ -274,17 +275,22 @@ export default function GameStore() {
           }
         })}
       </ul>
-      {quickActionTarget &&
+      {quickActionTargets.length > 0 &&
         ReactDOM.createPortal(
-          <div
-            className={`mobile-shop-quick-action${quickActionTarget.active ? " active" : ""}`}
-            style={{
-              left: quickActionTarget.left,
-              top: quickActionTarget.top
-            }}
-          >
-            <img src="/assets/ui/trash.svg" alt={t("drop_here_to_sell")} />
-          </div>,
+          <>
+            {quickActionTargets.map((target) => (
+              <div
+                key={target.side}
+                className={`mobile-shop-quick-action mobile-shop-quick-action-${target.side}${target.active ? " active" : ""}`}
+                style={{
+                  left: target.left,
+                  top: target.top
+                }}
+              >
+                <img src="/assets/ui/trash.svg" alt={t("drop_here_to_sell")} />
+              </div>
+            ))}
+          </>,
           document.body
         )}
     </>

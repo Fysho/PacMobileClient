@@ -97,6 +97,9 @@ export default function GamePokemonPortrait(props: {
   const suppressTouchClick = useRef(false)
   const [touchTooltipControlled, setTouchTooltipControlled] = useState(false)
   const [touchTooltipOpen, setTouchTooltipOpen] = useState(false)
+  const [touchTooltipSide, setTouchTooltipSide] = useState<
+    "left" | "center" | "right" | null
+  >(null)
 
   // recount where board size or pokemon on this shop cell changes
   useEffect(() => {
@@ -221,6 +224,7 @@ export default function GamePokemonPortrait(props: {
     touchLongPress.current = false
     touchPointerId.current = null
     setTouchTooltipOpen(false)
+    setTouchTooltipSide(null)
   }
 
   return (
@@ -252,6 +256,13 @@ export default function GamePokemonPortrait(props: {
         }
         setTouchTooltipControlled(true)
         setTouchTooltipOpen(false)
+        setTouchTooltipSide(
+          props.origin === "shop"
+            ? "center"
+            : event.clientX < window.innerWidth / 2
+              ? "right"
+              : "left"
+        )
         touchLongPress.current = false
         touchPointerId.current = pointerId
         touchPointerPosition.current = {
@@ -296,18 +307,13 @@ export default function GamePokemonPortrait(props: {
       onPointerEnter={(event) => {
         if (event.pointerType === "mouse") {
           setTouchTooltipControlled(false)
+          setTouchTooltipSide(null)
         }
       }}
       onPointerUp={(event) => stopTouchTooltip(event, true, false)}
       onPointerCancel={(event) => stopTouchTooltip(event, false, true)}
       onPointerLeave={(event) => {
-        if (
-          touchLongPress.current &&
-          props.origin === "shop" &&
-          props.onMobileLongPressMove
-        ) {
-          return
-        }
+        if (touchLongPress.current) return
         stopTouchTooltip(event, true, true)
       }}
       onClick={(e) => {
@@ -325,7 +331,12 @@ export default function GamePokemonPortrait(props: {
     >
       <Tooltip
         id={`tooltip-${props.origin}-${props.index}`}
-        className="custom-theme-tooltip game-pokemon-detail-tooltip"
+        className={cc("custom-theme-tooltip game-pokemon-detail-tooltip", {
+          "mobile-held-pokemon-detail": true,
+          "mobile-detail-center": touchTooltipSide === "center",
+          "mobile-detail-left": touchTooltipSide === "left",
+          "mobile-detail-right": touchTooltipSide === "right"
+        })}
         place="top"
         isOpen={touchTooltipControlled ? touchTooltipOpen : undefined}
       >

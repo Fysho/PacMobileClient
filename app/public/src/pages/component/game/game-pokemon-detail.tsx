@@ -394,8 +394,10 @@ export class GamePokemonDetailDOMWrapper extends GameObjects.DOMElement {
     this.render()
   }
 
-  public dockForMobile() {
+  public dockForMobile(placeOnRight = false) {
     if (window.matchMedia("(hover: none) and (pointer: coarse)").matches) {
+      this.dom.classList.toggle("mobile-detail-left", !placeOnRight)
+      this.dom.classList.toggle("mobile-detail-right", placeOnRight)
       document.getElementById("game-wrapper")?.appendChild(this.dom)
     }
   }

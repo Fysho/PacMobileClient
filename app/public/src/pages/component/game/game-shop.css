@@ -392,6 +392,26 @@
 }
 
 @media (hover: none) and (pointer: coarse) {
+  .game-pokemons-store > .game-pokemon-portrait,
+  .game-choice .game-pokemon-portrait {
+    touch-action: none;
+  }
+
+  #game-money-info,
+  #game-life-info,
+  #game-team-info {
+    background-image: none;
+    background-size: auto;
+  }
+
+  .game-shop .information {
+    padding-left: 0;
+  }
+
+  .game-shop .information > div {
+    border-radius: 7px 7px 0 0;
+  }
+
   #game-wrapper .game-shop.my-container {
     left: max(8vw, calc(68px + env(safe-area-inset-left)));
     right: max(8vw, var(--mobile-player-sidebar-width));

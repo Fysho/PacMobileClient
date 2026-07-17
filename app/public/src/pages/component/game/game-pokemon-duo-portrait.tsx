@@ -32,6 +32,9 @@ export default function GamePokemonDuoPortrait(props: {
   const [touchTooltipIndex, setTouchTooltipIndex] = useState<number | null>(
     null
   )
+  const [touchTooltipSide, setTouchTooltipSide] = useState<
+    "left" | "right" | null
+  >(null)
 
   useEffect(
     () => () => {
@@ -63,6 +66,7 @@ export default function GamePokemonDuoPortrait(props: {
     touchLongPress.current = false
     touchPointerId.current = null
     setTouchTooltipIndex(null)
+    setTouchTooltipSide(null)
   }
 
   return (
@@ -107,6 +111,9 @@ export default function GamePokemonDuoPortrait(props: {
               }
               setTouchTooltipControlled(true)
               setTouchTooltipIndex(null)
+              setTouchTooltipSide(
+                event.clientX < window.innerWidth / 2 ? "right" : "left"
+              )
               touchLongPress.current = false
               touchPointerId.current = event.pointerId
               event.currentTarget.setPointerCapture?.(event.pointerId)
@@ -121,15 +128,23 @@ export default function GamePokemonDuoPortrait(props: {
             onPointerEnter={(event) => {
               if (event.pointerType === "mouse") {
                 setTouchTooltipControlled(false)
+                setTouchTooltipSide(null)
               }
             }}
             onPointerUp={(event) => stopTouchTooltip(event, true)}
             onPointerCancel={(event) => stopTouchTooltip(event, false)}
-            onPointerLeave={(event) => stopTouchTooltip(event, true)}
+            onPointerLeave={(event) => {
+              if (touchLongPress.current) return
+              stopTouchTooltip(event, true)
+            }}
           ></div>
           <Tooltip
             id={`tooltip-${props.origin}-${props.index}-${p.index}`}
-            className="custom-theme-tooltip game-pokemon-detail-tooltip"
+            className={cc("custom-theme-tooltip game-pokemon-detail-tooltip", {
+              "mobile-held-pokemon-detail": true,
+              "mobile-detail-left": touchTooltipSide === "left",
+              "mobile-detail-right": touchTooltipSide === "right"
+            })}
             place="bottom"
             isOpen={
               touchTooltipControlled ? touchTooltipIndex === i : undefined
