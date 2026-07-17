@@ -60,7 +60,7 @@ export default function GameDpsMeter() {
           <PokemonPortrait avatar={avatar} />
           <p>{name}</p>
         </div>
-        <span style={{ fontSize: "2rem" }}>vs</span>
+        <span className="game-dps-versus">vs</span>
         <div>
           <PokemonPortrait avatar={opponentAvatar} />
           <p>{isPVE ? t(opponentName as `pkm.${Pkm}`) : opponentName}</p>

@@ -49,23 +49,16 @@ export default function SynergyComponent(props: {
 
   return (
     <div
+      className="game-synergy-row"
       style={{
-        display: "grid",
-        gridTemplateColumns: "40px 2ch 1fr",
-        alignItems: "center",
-        justifyContent: "space-around",
         backgroundColor:
           props.value >= SynergyTriggers[props.type][0]
             ? "var(--color-bg-secondary)"
             : "rgba(84, 89, 107,0)",
-        margin: "4px",
-        borderRadius: "12px",
-        padding: "2px 0",
         border:
           props.value >= SynergyTriggers[props.type][0]
             ? "var(--border-thin)"
-            : "none",
-        cursor: "var(--cursor-hover)"
+            : "none"
       }}
       data-tooltip-id="detail-synergy"
       onPointerEnter={(event) => {
@@ -102,31 +95,17 @@ export default function SynergyComponent(props: {
         }
       }}
     >
-      <SynergyIcon type={props.type} />
+      <SynergyIcon type={props.type} className="game-synergy-row-icon" />
       <span
+        className="game-synergy-count"
         style={{
-          fontSize: "2em",
-          textShadow: "2px 2px 2px #000000c0",
-          textAlign: "center",
-          marginRight: "4px",
           color: levelReached ? "#ffffff" : "#b8b8b8"
         }}
       >
         {props.value}
       </span>
-      <div
-        style={{
-          display: "flex",
-          flexFlow: "column",
-          lineHeight: 1.25
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-evenly"
-          }}
-        >
+      <div className="game-synergy-labels">
+        <div className="game-synergy-triggers">
           {SynergyTriggers[props.type].map((t) => {
             return (
               <span
@@ -145,9 +124,7 @@ export default function SynergyComponent(props: {
             )
           })}
         </div>
-        <p style={{ margin: "0px", textAlign: "center", fontWeight: "500" }}>
-          {t(`synergy.${props.type}`)}
-        </p>
+        <p className="game-synergy-name">{t(`synergy.${props.type}`)}</p>
       </div>
     </div>
   )

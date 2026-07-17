@@ -230,9 +230,15 @@ aside.sidebar {
     position: fixed;
     left: 4px;
     bottom: max(4px, env(safe-area-inset-bottom));
-    width: 52px;
-    height: 52px;
-    padding: 3px;
+    box-sizing: border-box;
+    width: 44px;
+    min-width: 44px;
+    max-width: 44px;
+    height: 44px;
+    min-height: 44px;
+    max-height: 44px;
+    aspect-ratio: 1 / 1;
+    padding: 2px;
     place-items: center;
     border: var(--border-thick);
     border-radius: 12px;
@@ -244,8 +250,8 @@ aside.sidebar {
   }
 
   .mobile-sidebar-toggle img {
-    width: 42px;
-    height: 42px;
+    width: 34px;
+    height: 34px;
     image-rendering: pixelated;
   }
 

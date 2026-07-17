@@ -20,6 +20,10 @@
   text-align: center;
 }
 
+.game-dps-versus {
+  font-size: 2rem;
+}
+
 .game-dps-meter .draggable-window-content header img {
   width: 60px;
   height: 60px;
@@ -120,14 +124,55 @@
     padding: 6px;
   }
 
+  .game-dps-meter .draggable-window-content header {
+    gap: 2px;
+  }
+
+  .game-dps-meter .draggable-window-content header > div {
+    min-width: 0;
+  }
+
+  .game-dps-meter .draggable-window-content header p {
+    max-width: 68px;
+    margin: 2px 0 0;
+    overflow: hidden;
+    font-size: 0.7rem;
+    line-height: 1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .game-dps-meter .game-dps-versus {
+    font-size: 0.75rem;
+  }
+
   .game-dps-meter .draggable-window-content header img {
-    width: 36px;
-    height: 36px;
+    width: 24px;
+    height: 24px;
+  }
+
+  .game-dps-meter .react-tabs__tab-list {
+    margin: 2px 0 0;
+  }
+
+  .game-dps-meter .react-tabs__tab {
+    min-height: 0;
+    padding: 2px 8px;
+    line-height: 0;
   }
 
   .game-dps-meter .react-tabs__tab img {
-    width: 19.2px;
-    height: 19.2px;
+    width: 14px;
+    height: 14px;
+  }
+
+  .game-dps-meter .react-tabs__tab-panel--selected {
+    padding: 2px;
+  }
+
+  .game-dps-meter .react-tabs__tab-panel > p {
+    margin: 2px 0;
+    line-height: 1;
   }
 
   .game-dps-bar img {
