@@ -13,7 +13,6 @@ import {
 } from "../../../hooks"
 import { usePreferences } from "../../../preferences"
 import { setSearchedUser } from "../../../stores/LobbyStore"
-import { toggleFullScreen } from "../../utils/fullscreen"
 import { cc } from "../../utils/jsx"
 import AdminPanel from "../admin/admin-panel"
 import Booster from "../booster/booster"
@@ -410,12 +409,6 @@ export function MainSidebar(props: MainSidebarProps) {
           <NavLink svg="options" location="options" handleClick={changeModal}>
             {t("options.title")}
           </NavLink>
-
-          {page === "game" && document.fullscreenEnabled && (
-            <NavLink svg="fullscreen" onClick={toggleFullScreen}>
-              {t("toggle_fullscreen")}
-            </NavLink>
-          )}
 
           <div className="spacer"></div>
 

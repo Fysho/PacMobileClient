@@ -102,7 +102,6 @@ import {
 } from "./component/main-sidebar/main-sidebar"
 import { ConnectionStatusNotification } from "./component/system/connection-status-notification"
 import { playMusic, preloadMusic } from "./utils/audio"
-import { enterFullScreen } from "./utils/fullscreen"
 import { LocalStoreKeys, localStore } from "./utils/store"
 import { transformEntityCoordinates } from "./utils/utils"
 
@@ -196,25 +195,6 @@ export default function Game() {
   const currentGameEvent = getCurrentGameEvent()
 
   const MAX_ATTEMPS_RECONNECT = 3
-  useEffect(() => {
-    if (
-      !loaded ||
-      !window.matchMedia("(hover: none) and (pointer: coarse)").matches ||
-      !document.fullscreenEnabled ||
-      document.fullscreenElement
-    ) {
-      return
-    }
-
-    const enterOnFirstTouch = (event: PointerEvent) => {
-      if (event.pointerType === "touch") {
-        void enterFullScreen()
-      }
-    }
-
-    window.addEventListener("pointerdown", enterOnFirstTouch, { once: true })
-    return () => window.removeEventListener("pointerdown", enterOnFirstTouch)
-  }, [loaded])
 
   const connectToGame = useCallback(
     async (attempts = 1) => {

@@ -20,6 +20,12 @@ import Lobby from "./pages/lobby"
 import Preparation from "./pages/preparation"
 import { SpriteDebug } from "./pages/sprite-viewer"
 import TranslationsPage from "./pages/translations"
+import {
+  enterFullScreen,
+  exitFullScreen,
+  getFullScreenElement,
+  isFullScreenDisplayMode
+} from "./pages/utils/fullscreen"
 import store from "./stores/index"
 import "./style/index.css"
 import "./theme"
@@ -61,6 +67,8 @@ function LandscapeGate({ children }: PropsWithChildren) {
   const [portraitBlocked, setPortraitBlocked] = useState(
     portraitMedia.current.matches
   )
+  const [fullscreen, setFullscreen] = useState(getFullScreenElement() !== null)
+  const installedFullscreen = useRef(isFullScreenDisplayMode())
 
   useEffect(() => {
     const media = portraitMedia.current
@@ -68,22 +76,45 @@ function LandscapeGate({ children }: PropsWithChildren) {
       setPortraitBlocked(media.matches)
       if (media.matches) void requestLandscapeOrientation()
     }
-    const requestOnFirstTouch = (event: PointerEvent) => {
-      if (event.pointerType === "touch") void requestLandscapeOrientation()
+    const updateFullscreen = () => {
+      setFullscreen(getFullScreenElement() !== null)
+      void requestLandscapeOrientation()
+    }
+    const removeLaunchListeners = () => {
+      window.removeEventListener("pointerdown", enterOnFirstInteraction, true)
+      window.removeEventListener("keydown", enterOnFirstInteraction, true)
+    }
+    const enterOnFirstInteraction = (event: Event) => {
+      removeLaunchListeners()
+      if (
+        event.target instanceof Element &&
+        event.target.closest(".fullscreen-toggle")
+      ) {
+        return
+      }
+      void enterFullScreen().then(requestLandscapeOrientation)
     }
 
     updateOrientation()
     media.addEventListener("change", updateOrientation)
-    document.addEventListener("fullscreenchange", requestLandscapeOrientation)
-    window.addEventListener("pointerdown", requestOnFirstTouch, { once: true })
+    document.addEventListener("fullscreenchange", updateFullscreen)
+    document.addEventListener("webkitfullscreenchange", updateFullscreen)
+    if (!installedFullscreen.current) {
+      window.addEventListener("pointerdown", enterOnFirstInteraction, {
+        once: true,
+        capture: true
+      })
+      window.addEventListener("keydown", enterOnFirstInteraction, {
+        once: true,
+        capture: true
+      })
+    }
 
     return () => {
       media.removeEventListener("change", updateOrientation)
-      document.removeEventListener(
-        "fullscreenchange",
-        requestLandscapeOrientation
-      )
-      window.removeEventListener("pointerdown", requestOnFirstTouch)
+      document.removeEventListener("fullscreenchange", updateFullscreen)
+      document.removeEventListener("webkitfullscreenchange", updateFullscreen)
+      removeLaunchListeners()
     }
   }, [])
 
@@ -100,6 +131,24 @@ function LandscapeGate({ children }: PropsWithChildren) {
       >
         {children}
       </div>
+      {!installedFullscreen.current && (
+        <button
+          type="button"
+          className="fullscreen-toggle bubbly"
+          aria-label={i18n.t("toggle_fullscreen")}
+          aria-pressed={fullscreen}
+          title={i18n.t("toggle_fullscreen")}
+          onClick={() => {
+            if (getFullScreenElement()) {
+              void exitFullScreen()
+            } else {
+              void enterFullScreen().then(requestLandscapeOrientation)
+            }
+          }}
+        >
+          <img src="/assets/ui/fullscreen.svg" alt="" />
+        </button>
+      )}
       {portraitBlocked && (
         <div
           className="mobile-landscape-blocker"
