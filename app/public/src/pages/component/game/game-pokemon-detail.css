@@ -14,7 +14,7 @@
 }
 
 @media (hover: none) and (pointer: coarse) {
-  .react-tooltip.game-pokemon-detail-tooltip.mobile-held-pokemon-detail,
+  .game-pokemon-detail-tooltip.mobile-held-pokemon-detail,
   .my-container.game-pokemon-detail-tooltip.board-pokemon-detail-panel {
     position: fixed !important;
     z-index: 199 !important;
@@ -22,13 +22,16 @@
     bottom: auto !important;
     width: min(320px, calc(100vw - var(--mobile-player-sidebar-width) - 24px));
     overflow: visible;
-    --mobile-detail-translate-y: max(
-      -50%,
-      calc(-20% - 50dvh + max(8px, env(safe-area-inset-top)))
-    );
+    --mobile-detail-translate-y: max(-50%, calc(-20% - 50dvh + 8px));
   }
-  .react-tooltip.game-pokemon-detail-tooltip.mobile-held-pokemon-detail {
+  .game-pokemon-detail-tooltip.mobile-held-pokemon-detail {
     transition: none !important;
+  }
+
+  .mobile-held-pokemon-detail-overlay {
+    display: block !important;
+    opacity: 1 !important;
+    pointer-events: none !important;
   }
 
   .my-container.game-pokemon-detail-tooltip.board-pokemon-detail-panel {
@@ -41,24 +44,24 @@
   .game-pokemon-detail-tooltip.mobile-detail-center {
     right: auto !important;
     left: 50vw !important;
-    transform: translate(-50%, var(--mobile-detail-translate-y)) scale(0.6) !important;
+    transform: translate(-50%, var(--mobile-detail-translate-y))
+      translateY(var(--mobile-detail-top-offset, 0px)) scale(0.6) !important;
     transform-origin: center center;
   }
 
   .game-pokemon-detail-tooltip.mobile-detail-left {
     right: auto !important;
-    left: max(8px, env(safe-area-inset-left)) !important;
-    transform: translateY(var(--mobile-detail-translate-y)) scale(0.6) !important;
+    left: 8px !important;
+    transform: translateY(var(--mobile-detail-translate-y))
+      translateY(var(--mobile-detail-top-offset, 0px)) scale(0.6) !important;
     transform-origin: left center;
   }
 
   .game-pokemon-detail-tooltip.mobile-detail-right {
-    right: max(
-      calc(var(--mobile-player-sidebar-width) + 8px),
-      env(safe-area-inset-right)
-    ) !important;
+    right: calc(var(--mobile-player-sidebar-width) + 8px) !important;
     left: auto !important;
-    transform: translateY(var(--mobile-detail-translate-y)) scale(0.6) !important;
+    transform: translateY(var(--mobile-detail-translate-y))
+      translateY(var(--mobile-detail-top-offset, 0px)) scale(0.6) !important;
     transform-origin: right center;
   }
 }

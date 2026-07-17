@@ -128,12 +128,7 @@
     width: min(380px, calc(100vw - var(--mobile-player-sidebar-width) - 24px));
     min-width: 0;
     max-width: none;
-    max-height: calc(
-      100dvh -
-      96px -
-      env(safe-area-inset-top) -
-      env(safe-area-inset-bottom)
-    );
+    max-height: calc(100dvh - 96px);
     overflow-x: hidden;
     overflow-y: auto;
     opacity: 1 !important;

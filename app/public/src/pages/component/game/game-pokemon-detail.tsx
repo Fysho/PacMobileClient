@@ -368,6 +368,8 @@ export class GamePokemonDetailDOMWrapper extends GameObjects.DOMElement {
   private emotion?: Emotion
   private origin: "shop" | "team" | "planner" | "battle" | "wiki"
   isAlly: boolean
+  private mobileBoundsObserver?: ResizeObserver
+  private mobileBoundsFrame?: number
 
   constructor(
     scene: Phaser.Scene,
@@ -399,7 +401,24 @@ export class GamePokemonDetailDOMWrapper extends GameObjects.DOMElement {
       this.dom.classList.toggle("mobile-detail-left", !placeOnRight)
       this.dom.classList.toggle("mobile-detail-right", placeOnRight)
       document.getElementById("game-wrapper")?.appendChild(this.dom)
+      this.mobileBoundsObserver?.disconnect()
+      this.mobileBoundsObserver = new ResizeObserver(() =>
+        this.keepInsideMobileViewport()
+      )
+      this.mobileBoundsObserver.observe(this.dom)
+      this.mobileBoundsFrame = window.requestAnimationFrame(() =>
+        this.keepInsideMobileViewport()
+      )
     }
+  }
+
+  private keepInsideMobileViewport() {
+    this.dom.style.removeProperty("--mobile-detail-top-offset")
+    const top = this.dom.getBoundingClientRect().top
+    this.dom.style.setProperty(
+      "--mobile-detail-top-offset",
+      `${Math.max(0, 8 - top)}px`
+    )
   }
 
   private render() {
@@ -426,6 +445,10 @@ export class GamePokemonDetailDOMWrapper extends GameObjects.DOMElement {
   }
 
   public destroy() {
+    this.mobileBoundsObserver?.disconnect()
+    if (this.mobileBoundsFrame !== undefined) {
+      window.cancelAnimationFrame(this.mobileBoundsFrame)
+    }
     this.root.unmount()
     super.destroy()
   }

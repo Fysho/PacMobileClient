@@ -174,10 +174,7 @@ p:last-child {
   }
 
   #root #game-wrapper {
-    --mobile-player-sidebar-width: calc(
-      clamp(44px, 6vw, 56px) +
-      env(safe-area-inset-right)
-    );
+    --mobile-player-sidebar-width: clamp(44px, 6vw, 56px);
     left: 0;
     width: 100vw;
   }

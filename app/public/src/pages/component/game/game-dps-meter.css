@@ -110,3 +110,28 @@
   background-size: 6px 6px !important;
   background-blend-mode: overlay;
 }
+
+@media (hover: none) and (pointer: coarse) {
+  #root .game-dps-meter.maximized {
+    width: 192px;
+  }
+
+  .game-dps-meter .draggable-window-content {
+    padding: 6px;
+  }
+
+  .game-dps-meter .draggable-window-content header img {
+    width: 36px;
+    height: 36px;
+  }
+
+  .game-dps-meter .react-tabs__tab img {
+    width: 19.2px;
+    height: 19.2px;
+  }
+
+  .game-dps-bar img {
+    width: 24px;
+    height: 24px;
+  }
+}

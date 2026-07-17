@@ -25,9 +25,7 @@
     grid-template-rows: repeat(8, minmax(0, 1fr));
     align-items: center;
     justify-items: center;
-    padding: max(4px, env(safe-area-inset-top))
-      max(2px, env(safe-area-inset-right)) max(4px, env(safe-area-inset-bottom))
-      2px;
+    padding: 4px 2px;
     overflow: hidden;
   }
 

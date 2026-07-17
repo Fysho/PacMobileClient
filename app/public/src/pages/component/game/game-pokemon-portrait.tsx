@@ -1,5 +1,6 @@
 import type React from "react"
 import { useEffect, useMemo, useRef, useState } from "react"
+import ReactDOM from "react-dom"
 import { Tooltip } from "react-tooltip"
 import { RarityColor } from "../../../../../config"
 import { EvolutionManager } from "../../../../../core/evolution-logic/evolution-manager"
@@ -339,7 +340,7 @@ export default function GamePokemonPortrait(props: {
         })}
         place="top"
         positionStrategy="fixed"
-        isOpen={touchTooltipControlled ? touchTooltipOpen : undefined}
+        isOpen={touchTooltipControlled ? false : undefined}
       >
         <GamePokemonDetail
           key={pokemonInPortrait.id}
@@ -349,6 +350,31 @@ export default function GamePokemonPortrait(props: {
           origin={props.origin}
         />
       </Tooltip>
+      {touchTooltipControlled &&
+        touchTooltipOpen &&
+        ReactDOM.createPortal(
+          <div
+            id={`mobile-tooltip-${props.origin}-${props.index}`}
+            role="tooltip"
+            className={cc(
+              "custom-theme-tooltip game-pokemon-detail-tooltip mobile-held-pokemon-detail mobile-held-pokemon-detail-overlay",
+              {
+                "mobile-detail-center": touchTooltipSide === "center",
+                "mobile-detail-left": touchTooltipSide === "left",
+                "mobile-detail-right": touchTooltipSide === "right"
+              }
+            )}
+          >
+            <GamePokemonDetail
+              key={pokemonInPortrait.id}
+              pokemon={pokemonInPortrait}
+              emotion={pokemonCustom.emotion}
+              shiny={pokemonCustom.shiny}
+              origin={props.origin}
+            />
+          </div>,
+          document.body
+        )}
       {willEvolve && pokemonEvolution && (
         <div className="game-pokemon-portrait-evolution">
           <img

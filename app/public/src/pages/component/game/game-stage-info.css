@@ -141,15 +141,14 @@
     left: 0;
     right: var(--mobile-player-sidebar-width);
     width: auto;
-    height: calc(40px + env(safe-area-inset-top));
+    height: 40px;
     min-width: 0;
     max-width: none;
     box-sizing: border-box;
     transform: none;
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto auto;
-    padding: env(safe-area-inset-top) max(4px, env(safe-area-inset-right)) 3px
-      max(4px, env(safe-area-inset-left));
+    padding: 0 4px 3px;
     gap: 0.25em;
     overflow: hidden;
     border: 0;
