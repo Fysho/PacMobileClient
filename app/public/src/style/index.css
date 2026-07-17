@@ -107,23 +107,6 @@ kbd {
   height: 100dvh;
 }
 
-.fullscreen-toggle {
-  position: fixed;
-  right: 4px;
-  bottom: 4px;
-  width: 44px;
-  height: 44px;
-  padding: 5px;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  z-index: 10001;
-}
-
-.fullscreen-toggle img {
-  width: 28px;
-  height: 28px;
-}
-
 .custom-theme-tooltip {
   padding: 5px !important;
   border: var(--border-thick) !important;

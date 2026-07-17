@@ -18,6 +18,7 @@ import { min } from "../../../../../utils/number"
 import { selectSpectatedPlayer, useAppSelector } from "../../../hooks"
 import { getGameScene } from "../../game"
 import { addIconsToDescription } from "../../utils/descriptions"
+import { getFullScreenElement, toggleFullScreen } from "../../utils/fullscreen"
 import { cc } from "../../utils/jsx"
 import {
   getMobileClickTooltipProps,
@@ -30,6 +31,8 @@ import PokemonPortrait from "../pokemon-portrait"
 import TimerBar from "./game-timer-bar"
 import "./game-stage-info.css"
 
+type GameContextTooltipId = "detail-map" | "detail-weather" | "detail-game-mode"
+
 export default function GameStageInfo() {
   const { t } = useTranslation()
   const phase = useAppSelector((state) => state.game.phase)
@@ -38,6 +41,37 @@ export default function GameStageInfo() {
   const spectatedPlayer = useAppSelector(selectSpectatedPlayer)
   const stageLevel = useAppSelector((state) => state.game.stageLevel)
   const gameMode = useAppSelector((state) => state.game.gameMode)
+  const [fullscreen, setFullscreen] = React.useState(
+    getFullScreenElement() !== null
+  )
+  const [openContextTooltip, setOpenContextTooltip] =
+    React.useState<GameContextTooltipId | null>(null)
+  const closeContextTooltip = React.useCallback(
+    () => setOpenContextTooltip(null),
+    []
+  )
+  useMobileTooltipOutsideClose(
+    openContextTooltip,
+    openContextTooltip !== null,
+    closeContextTooltip
+  )
+  const toggleContextTooltip = (tooltipId: GameContextTooltipId) => {
+    setOpenContextTooltip((current) =>
+      current === tooltipId ? null : tooltipId
+    )
+  }
+
+  React.useEffect(() => {
+    const updateFullscreen = () => {
+      setFullscreen(getFullScreenElement() !== null)
+    }
+    document.addEventListener("fullscreenchange", updateFullscreen)
+    document.addEventListener("webkitfullscreenchange", updateFullscreen)
+    return () => {
+      document.removeEventListener("fullscreenchange", updateFullscreen)
+      document.removeEventListener("webkitfullscreenchange", updateFullscreen)
+    }
+  }, [])
 
   React.useEffect(() => {
     if (!spectatedPlayer) {
@@ -143,12 +177,21 @@ export default function GameStageInfo() {
 
         <div className="game-context-information">
           {spectatedPlayer.map && (
-            <div className="map-information" data-tooltip-id="detail-map">
+            <div
+              className="map-information"
+              data-tooltip-id="detail-map"
+              {...getMobileTooltipAnchorProps(() =>
+                toggleContextTooltip("detail-map")
+              )}
+            >
               {ReactDOM.createPortal(
                 <Tooltip
                   id="detail-map"
                   className="custom-theme-tooltip"
                   place="bottom"
+                  {...getMobileClickTooltipProps(
+                    openContextTooltip === "detail-map"
+                  )}
                 >
                   <div style={{ display: "flex", alignContent: "center" }}>
                     {RegionDetails[spectatedPlayer.map].synergies.map(
@@ -172,12 +215,18 @@ export default function GameStageInfo() {
             <div
               className="weather-information"
               data-tooltip-id="detail-weather"
+              {...getMobileTooltipAnchorProps(() =>
+                toggleContextTooltip("detail-weather")
+              )}
             >
               {ReactDOM.createPortal(
                 <Tooltip
                   id="detail-weather"
                   className="custom-theme-tooltip"
                   place="bottom"
+                  {...getMobileClickTooltipProps(
+                    openContextTooltip === "detail-weather"
+                  )}
                 >
                   <span style={{ verticalAlign: "middle" }}>
                     <SynergyIcon
@@ -199,12 +248,18 @@ export default function GameStageInfo() {
             <div
               className="game-mode-information"
               data-tooltip-id="detail-game-mode"
+              {...getMobileTooltipAnchorProps(() =>
+                toggleContextTooltip("detail-game-mode")
+              )}
             >
               {ReactDOM.createPortal(
                 <Tooltip
                   id="detail-game-mode"
                   className="custom-theme-tooltip"
                   place="bottom"
+                  {...getMobileClickTooltipProps(
+                    openContextTooltip === "detail-game-mode"
+                  )}
                 >
                   <p>{t(`game_modes.${gameMode}`)}</p>
                   <p>{t(`game_modes_descriptions.${gameMode}`)}</p>
@@ -214,6 +269,17 @@ export default function GameStageInfo() {
               <GameModeIcon gameMode={gameMode} />
             </div>
           )}
+
+          <button
+            type="button"
+            className="game-fullscreen-toggle"
+            aria-label={t("toggle_fullscreen")}
+            aria-pressed={fullscreen}
+            title={t("toggle_fullscreen")}
+            onClick={toggleFullScreen}
+          >
+            <img src="/assets/ui/fullscreen.svg" alt="" />
+          </button>
         </div>
 
         <TimerBar />

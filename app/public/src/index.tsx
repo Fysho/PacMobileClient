@@ -20,11 +20,7 @@ import Lobby from "./pages/lobby"
 import Preparation from "./pages/preparation"
 import { SpriteDebug } from "./pages/sprite-viewer"
 import TranslationsPage from "./pages/translations"
-import {
-  enterFullScreen,
-  exitFullScreen,
-  getFullScreenElement
-} from "./pages/utils/fullscreen"
+import { enterFullScreen } from "./pages/utils/fullscreen"
 import store from "./stores/index"
 import "./style/index.css"
 import "./theme"
@@ -66,7 +62,6 @@ function LandscapeGate({ children }: PropsWithChildren) {
   const [portraitBlocked, setPortraitBlocked] = useState(
     portraitMedia.current.matches
   )
-  const [fullscreen, setFullscreen] = useState(getFullScreenElement() !== null)
 
   useEffect(() => {
     const media = portraitMedia.current
@@ -75,7 +70,6 @@ function LandscapeGate({ children }: PropsWithChildren) {
       if (media.matches) void requestLandscapeOrientation()
     }
     const updateFullscreen = () => {
-      setFullscreen(getFullScreenElement() !== null)
       void requestLandscapeOrientation()
     }
     const removeLaunchListeners = () => {
@@ -86,7 +80,7 @@ function LandscapeGate({ children }: PropsWithChildren) {
       removeLaunchListeners()
       if (
         event.target instanceof Element &&
-        event.target.closest(".fullscreen-toggle")
+        event.target.closest(".game-fullscreen-toggle")
       ) {
         return
       }
@@ -127,22 +121,6 @@ function LandscapeGate({ children }: PropsWithChildren) {
       >
         {children}
       </div>
-      <button
-        type="button"
-        className="fullscreen-toggle bubbly"
-        aria-label={i18n.t("toggle_fullscreen")}
-        aria-pressed={fullscreen}
-        title={i18n.t("toggle_fullscreen")}
-        onClick={() => {
-          if (getFullScreenElement()) {
-            void exitFullScreen()
-          } else {
-            void enterFullScreen().then(requestLandscapeOrientation)
-          }
-        }}
-      >
-        <img src="/assets/ui/fullscreen.svg" alt="" />
-      </button>
       {portraitBlocked && (
         <div
           className="mobile-landscape-blocker"
