@@ -7,8 +7,6 @@ type WebkitFullscreenElement = HTMLElement & {
   webkitRequestFullscreen?: () => Promise<void> | void
 }
 
-export const FULL_SCREEN_DISPLAY_QUERY = "(display-mode: fullscreen)"
-
 export function getFullScreenElement(): Element | null {
   const fullscreenDocument = document as WebkitFullscreenDocument
   return (
@@ -16,10 +14,6 @@ export function getFullScreenElement(): Element | null {
     fullscreenDocument.webkitFullscreenElement ??
     null
   )
-}
-
-export function isFullScreenDisplayMode(): boolean {
-  return window.matchMedia(FULL_SCREEN_DISPLAY_QUERY).matches
 }
 
 export function isFullScreenSupported(): boolean {
@@ -32,11 +26,7 @@ export function isFullScreenSupported(): boolean {
 }
 
 export async function enterFullScreen(): Promise<void> {
-  if (
-    getFullScreenElement() ||
-    isFullScreenDisplayMode() ||
-    !isFullScreenSupported()
-  ) {
+  if (getFullScreenElement() || !isFullScreenSupported()) {
     return
   }
 
