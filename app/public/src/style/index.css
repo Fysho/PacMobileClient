@@ -109,8 +109,8 @@ kbd {
 
 .fullscreen-toggle {
   position: fixed;
-  right: max(8px, env(safe-area-inset-right));
-  bottom: max(8px, env(safe-area-inset-bottom));
+  right: 4px;
+  bottom: 4px;
   width: 44px;
   height: 44px;
   padding: 5px;
@@ -122,14 +122,6 @@ kbd {
 .fullscreen-toggle img {
   width: 28px;
   height: 28px;
-}
-
-@media (hover: none) and (pointer: coarse) {
-  .fullscreen-toggle {
-    right: auto;
-    left: max(4px, env(safe-area-inset-left));
-    bottom: calc(max(4px, env(safe-area-inset-bottom)) + 60px);
-  }
 }
 
 .custom-theme-tooltip {

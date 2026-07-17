@@ -228,7 +228,7 @@ aside.sidebar {
   .mobile-sidebar-toggle {
     display: grid;
     position: fixed;
-    left: max(4px, env(safe-area-inset-left));
+    left: 4px;
     bottom: max(4px, env(safe-area-inset-bottom));
     width: 52px;
     height: 52px;
