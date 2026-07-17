@@ -267,6 +267,7 @@ export default class ItemContainer extends DraggableObject {
     )
     this.add(this.tempSprite)
     this.add(this.tempDetail)
+    this.tempDetail.dockForMobile()
     this.tempDetail.setVisible(true)
   }
 

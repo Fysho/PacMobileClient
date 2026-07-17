@@ -71,6 +71,14 @@
 }
 
 @media (hover: none) and (pointer: coarse) {
+  .game-choice.mission-order-choice {
+    top: 44px;
+  }
+
+  .game-choice.mission-order-choice .show-hide-action {
+    margin: 4px;
+  }
+
   .game-choice-message-long {
     display: none;
   }
@@ -82,5 +90,15 @@
   .game-choice .choice-additional-item p,
   .game-choice .game-choice-items-list > .my-box > p {
     display: none;
+  }
+
+  .game-choice .game-choice-items-list > .my-box > .mission-order-description {
+    display: block;
+    max-width: 100%;
+    margin-bottom: 0.25em !important;
+    font-size: 0.75rem;
+    line-height: 1.15;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
   }
 }

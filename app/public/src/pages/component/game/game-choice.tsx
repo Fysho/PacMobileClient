@@ -107,7 +107,7 @@ export default function GameChoice() {
 
   return (
     <div
-      className="game-choice"
+      className={`game-choice${choice.type === "mission_order" ? " mission-order-choice" : ""}`}
       style={{ zIndex: DEPTH.MODAL }}
       onPointerDown={isolateChoicePointer}
       onPointerUp={isolateChoicePointer}
@@ -216,7 +216,14 @@ export default function GameChoice() {
                   src={"assets/item/" + item + ".png"}
                 />
                 <h3 style={{ margin: "0.25em 0" }}>{t(`item.${item}`)}</h3>
-                <p style={{ marginBottom: "0.5em" }}>
+                <p
+                  className={
+                    choice.type === "mission_order"
+                      ? "mission-order-description"
+                      : undefined
+                  }
+                  style={{ marginBottom: "0.5em" }}
+                >
                   {addIconsToDescription(t(`item_description.${item}`))}
                 </p>
               </div>
