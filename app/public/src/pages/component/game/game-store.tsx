@@ -37,51 +37,24 @@ function isInsideQuickAction(
   )
 }
 
-function clamp(value: number, minimum: number, maximum: number) {
-  return Math.min(maximum, Math.max(minimum, value))
-}
-
-function getQuickActionPositions(detailRect?: DOMRect) {
-  const topHudBottom =
-    document.getElementById("game-stage-info")?.getBoundingClientRect()
-      .bottom ?? 0
+function getQuickActionPositions() {
   const shopRect = document
     .querySelector<HTMLElement>(".game-shop")
     ?.getBoundingClientRect()
-  const shopTop = shopRect?.top ?? window.innerHeight
   const playerRailLeft =
     document.getElementById("game-players")?.getBoundingClientRect().left ??
     window.innerWidth
-  const leftBound = Math.max(QUICK_ACTION_MARGIN, shopRect?.left ?? 0)
-  const rightBound = Math.max(
-    leftBound,
+  const left = Math.max(QUICK_ACTION_MARGIN, shopRect?.left ?? 0)
+  const right = Math.max(
+    left,
     playerRailLeft - QUICK_ACTION_SIZE - QUICK_ACTION_MARGIN
   )
-  const topBound = Math.min(
-    window.innerHeight - QUICK_ACTION_SIZE - QUICK_ACTION_MARGIN,
-    Math.max(QUICK_ACTION_MARGIN, topHudBottom + QUICK_ACTION_MARGIN)
+  const top = Math.max(
+    QUICK_ACTION_MARGIN,
+    (shopRect?.top ?? window.innerHeight) -
+      QUICK_ACTION_SIZE -
+      QUICK_ACTION_MARGIN
   )
-  const bottomBound = Math.max(
-    topBound,
-    shopTop - QUICK_ACTION_SIZE - QUICK_ACTION_MARGIN
-  )
-  const top = detailRect
-    ? clamp(
-        detailRect.top + detailRect.height / 2 - QUICK_ACTION_SIZE / 2,
-        topBound,
-        bottomBound
-      )
-    : clamp((topBound + bottomBound) / 2, topBound, bottomBound)
-  const left = detailRect
-    ? clamp(
-        detailRect.left - QUICK_ACTION_SIZE - QUICK_ACTION_MARGIN,
-        leftBound,
-        rightBound
-      )
-    : leftBound
-  const right = detailRect
-    ? clamp(detailRect.right + QUICK_ACTION_MARGIN, leftBound, rightBound)
-    : rightBound
 
   return [
     { side: "left" as const, left, top },
@@ -99,11 +72,6 @@ export default function GameStore() {
     ShopQuickActionTarget[]
   >([])
   const quickActionTargetsRef = useRef<ShopQuickActionTarget[]>([])
-  const quickActionPointerRef = useRef<MobileQuickActionPointer>({
-    clientX: 0,
-    clientY: 0
-  })
-  const quickActionPlacementTimer = useRef<number | null>(null)
   useEffect(() => {
     if (teamPlanner && !Array.isArray(teamPlanner)) {
       setTeamPlanner([]) // in case team planner local storage has been corrupted somehow (loading a wrong file for example)
@@ -119,15 +87,6 @@ export default function GameStore() {
     }
   }, [])
 
-  useEffect(
-    () => () => {
-      if (quickActionPlacementTimer.current !== null) {
-        window.clearTimeout(quickActionPlacementTimer.current)
-      }
-    },
-    []
-  )
-
   const scene = getGameScene()
 
   const updateQuickActionTargets = (targets: ShopQuickActionTarget[]) => {
@@ -135,11 +94,7 @@ export default function GameStore() {
     setQuickActionTargets(targets)
   }
 
-  const startQuickAction = (
-    index: number,
-    pointer: MobileQuickActionPointer
-  ) => {
-    quickActionPointerRef.current = pointer
+  const startQuickAction = (index: number) => {
     updateQuickActionTargets(
       getQuickActionPositions().map((position) => ({
         index,
@@ -147,47 +102,9 @@ export default function GameStore() {
         active: false
       }))
     )
-
-    if (quickActionPlacementTimer.current !== null) {
-      window.clearTimeout(quickActionPlacementTimer.current)
-    }
-    quickActionPlacementTimer.current = window.setTimeout(() => {
-      quickActionPlacementTimer.current = null
-      if (
-        !quickActionTargetsRef.current.some((target) => target.index === index)
-      ) {
-        return
-      }
-
-      const tooltip = document.getElementById(`tooltip-shop-${index}`)
-      const style = tooltip ? window.getComputedStyle(tooltip) : null
-      const detailRect =
-        tooltip &&
-        style?.display !== "none" &&
-        (style?.opacity !== "0" ||
-          tooltip.classList.contains("react-tooltip__show"))
-          ? tooltip.getBoundingClientRect()
-          : undefined
-      const adjustedTargets = getQuickActionPositions(detailRect).map(
-        (position) => {
-          const target = {
-            index,
-            ...position,
-            active: false
-          }
-          target.active = isInsideQuickAction(
-            quickActionPointerRef.current,
-            target
-          )
-          return target
-        }
-      )
-      updateQuickActionTargets(adjustedTargets)
-    }, 80)
   }
 
   const moveQuickAction = (pointer: MobileQuickActionPointer) => {
-    quickActionPointerRef.current = pointer
     const currentTargets = quickActionTargetsRef.current
     if (currentTargets.length === 0) return
 
@@ -212,10 +129,6 @@ export default function GameStore() {
     pointer: MobileQuickActionPointer,
     cancelled: boolean
   ) => {
-    if (quickActionPlacementTimer.current !== null) {
-      window.clearTimeout(quickActionPlacementTimer.current)
-      quickActionPlacementTimer.current = null
-    }
     const target = quickActionTargetsRef.current.find((candidate) =>
       isInsideQuickAction(pointer, candidate)
     )

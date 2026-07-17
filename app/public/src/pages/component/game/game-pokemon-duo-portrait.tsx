@@ -146,6 +146,7 @@ export default function GamePokemonDuoPortrait(props: {
               "mobile-detail-right": touchTooltipSide === "right"
             })}
             place="bottom"
+            positionStrategy="fixed"
             isOpen={
               touchTooltipControlled ? touchTooltipIndex === i : undefined
             }

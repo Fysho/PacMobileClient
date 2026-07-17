@@ -338,6 +338,7 @@ export default function GamePokemonPortrait(props: {
           "mobile-detail-right": touchTooltipSide === "right"
         })}
         place="top"
+        positionStrategy="fixed"
         isOpen={touchTooltipControlled ? touchTooltipOpen : undefined}
       >
         <GamePokemonDetail

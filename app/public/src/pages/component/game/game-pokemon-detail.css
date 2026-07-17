@@ -17,19 +17,20 @@
   .react-tooltip.game-pokemon-detail-tooltip.mobile-held-pokemon-detail,
   .my-container.game-pokemon-detail-tooltip.board-pokemon-detail-panel {
     position: fixed !important;
-    z-index: 75 !important;
+    z-index: 199 !important;
     top: 50dvh !important;
     bottom: auto !important;
     width: min(320px, calc(100vw - var(--mobile-player-sidebar-width) - 24px));
-    max-height: calc(
-      100dvh -
-      128px -
-      env(safe-area-inset-top) -
-      env(safe-area-inset-bottom)
+    overflow: visible;
+    --mobile-detail-translate-y: max(
+      -50%,
+      calc(-20% - 50dvh + max(8px, env(safe-area-inset-top)))
     );
-    overflow-x: hidden;
-    overflow-y: auto;
   }
+  .react-tooltip.game-pokemon-detail-tooltip.mobile-held-pokemon-detail {
+    transition: none !important;
+  }
+
   .my-container.game-pokemon-detail-tooltip.board-pokemon-detail-panel {
     display: block !important;
     opacity: 1 !important;
@@ -40,14 +41,14 @@
   .game-pokemon-detail-tooltip.mobile-detail-center {
     right: auto !important;
     left: 50vw !important;
-    transform: translate(-50%, -50%) scale(0.6) !important;
+    transform: translate(-50%, var(--mobile-detail-translate-y)) scale(0.6) !important;
     transform-origin: center center;
   }
 
   .game-pokemon-detail-tooltip.mobile-detail-left {
     right: auto !important;
     left: max(8px, env(safe-area-inset-left)) !important;
-    transform: translateY(-50%) scale(0.6) !important;
+    transform: translateY(var(--mobile-detail-translate-y)) scale(0.6) !important;
     transform-origin: left center;
   }
 
@@ -57,7 +58,7 @@
       env(safe-area-inset-right)
     ) !important;
     left: auto !important;
-    transform: translateY(-50%) scale(0.6) !important;
+    transform: translateY(var(--mobile-detail-translate-y)) scale(0.6) !important;
     transform-origin: right center;
   }
 }

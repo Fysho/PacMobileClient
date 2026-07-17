@@ -415,9 +415,9 @@
   #game-wrapper .game-shop.my-container {
     left: max(8vw, calc(68px + env(safe-area-inset-left)));
     right: max(8vw, var(--mobile-player-sidebar-width));
-    bottom: max(5px, env(safe-area-inset-bottom));
+    bottom: max(1px, env(safe-area-inset-bottom));
     gap: 2px;
-    padding: 2px;
+    padding: 0 2px;
   }
 
   .game-shop-actions,
