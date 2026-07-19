@@ -16,3 +16,22 @@
   line-height: 1.1;
   margin: 0.5em 0;
 }
+
+.game-options-modal .mobile-options {
+  display: grid;
+  gap: 1rem;
+  min-width: min(360px, 70vw);
+}
+
+.game-options-modal .mobile-options > p {
+  margin: 0;
+}
+
+.game-options-modal .mobile-options > label {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.game-options-modal .mobile-options input[type="range"] {
+  width: 100%;
+}

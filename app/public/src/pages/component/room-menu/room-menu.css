@@ -51,3 +51,24 @@ section.room-menu .room-menu > ul {
   grid-auto-rows: min-content;
   gap: 8px;
 }
+
+@media (width <= 960px) {
+  .room-menu {
+    position: relative;
+  }
+
+  .room-menu .react-tabs__tab-panel--selected {
+    min-height: 0;
+    padding-bottom: 56px;
+  }
+
+  .room-menu .play-button {
+    position: absolute;
+    z-index: 2;
+    left: 50%;
+    bottom: 8px;
+    min-height: 44px;
+    margin: 0;
+    transform: translateX(-50%);
+  }
+}

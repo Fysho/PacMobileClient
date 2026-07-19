@@ -69,6 +69,27 @@ export function toggleFullScreen(): void {
   }
 }
 
+export function useFullScreenState(): boolean {
+  const [fullscreen, setFullscreen] = useState(
+    () => getFullScreenElement() !== null
+  )
+
+  useEffect(() => {
+    const updateFullscreen = () => {
+      setFullscreen(getFullScreenElement() !== null)
+    }
+
+    document.addEventListener("fullscreenchange", updateFullscreen)
+    document.addEventListener("webkitfullscreenchange", updateFullscreen)
+    return () => {
+      document.removeEventListener("fullscreenchange", updateFullscreen)
+      document.removeEventListener("webkitfullscreenchange", updateFullscreen)
+    }
+  }, [])
+
+  return fullscreen
+}
+
 const MOBILE_PORTRAIT_QUERY =
   "(hover: none) and (pointer: coarse) and (orientation: portrait)"
 

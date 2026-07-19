@@ -18,7 +18,7 @@ import { min } from "../../../../../utils/number"
 import { selectSpectatedPlayer, useAppSelector } from "../../../hooks"
 import { getGameScene } from "../../game"
 import { addIconsToDescription } from "../../utils/descriptions"
-import { getFullScreenElement, toggleFullScreen } from "../../utils/fullscreen"
+import { toggleFullScreen, useFullScreenState } from "../../utils/fullscreen"
 import { cc } from "../../utils/jsx"
 import {
   getMobileClickTooltipProps,
@@ -41,9 +41,7 @@ export default function GameStageInfo() {
   const spectatedPlayer = useAppSelector(selectSpectatedPlayer)
   const stageLevel = useAppSelector((state) => state.game.stageLevel)
   const gameMode = useAppSelector((state) => state.game.gameMode)
-  const [fullscreen, setFullscreen] = React.useState(
-    getFullScreenElement() !== null
-  )
+  const fullscreen = useFullScreenState()
   const [openContextTooltip, setOpenContextTooltip] =
     React.useState<GameContextTooltipId | null>(null)
   const closeContextTooltip = React.useCallback(
@@ -60,18 +58,6 @@ export default function GameStageInfo() {
       current === tooltipId ? null : tooltipId
     )
   }
-
-  React.useEffect(() => {
-    const updateFullscreen = () => {
-      setFullscreen(getFullScreenElement() !== null)
-    }
-    document.addEventListener("fullscreenchange", updateFullscreen)
-    document.addEventListener("webkitfullscreenchange", updateFullscreen)
-    return () => {
-      document.removeEventListener("fullscreenchange", updateFullscreen)
-      document.removeEventListener("webkitfullscreenchange", updateFullscreen)
-    }
-  }, [])
 
   React.useEffect(() => {
     if (!spectatedPlayer) {

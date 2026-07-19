@@ -82,6 +82,12 @@ img {
   border-style: none;
 }
 
+@media (hover: none) and (pointer: coarse) {
+  :root {
+    font-size: var(--mobile-ui-scale, 100%);
+  }
+}
+
 table {
   border-collapse: collapse;
 }
@@ -437,4 +443,40 @@ summary,
   margin: 8px auto 0;
   border-radius: 999px;
   background: currentColor;
+}
+
+@media (hover: none) and (pointer: coarse) {
+  body {
+    font-size: 1rem;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) and (width <= 2500px) {
+  body {
+    font-size: 1.375rem;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) and (width <= 1600px) {
+  body {
+    font-size: 1.125rem;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) and (width <= 1280px) {
+  body {
+    font-size: 1rem;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) and (width <= 1024px) {
+  body {
+    font-size: 0.875rem;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) and (width <= 640px) {
+  body {
+    font-size: 0.75rem;
+  }
 }

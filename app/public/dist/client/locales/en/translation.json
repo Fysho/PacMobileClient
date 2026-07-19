@@ -3995,6 +3995,8 @@
 		"title": "Options",
 		"sound": "Sound",
 		"interface": "Interface",
+    "mobile": "Mobile",
+    "ui_scale": "UI scale",
 		"hotkeys": "Hotkeys",
 		"game_files": "Game Files",
 		"sfx_volume": "SFX Volume",

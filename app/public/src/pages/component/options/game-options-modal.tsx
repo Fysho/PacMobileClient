@@ -7,9 +7,16 @@ import { GADGETS } from "../../../../../config/game/gadgets"
 import { Language } from "../../../../../types/enum/Language"
 import { LanguageNames } from "../../../../dist/client/locales"
 import { useAppDispatch, useAppSelector } from "../../../hooks"
-import { usePreferences } from "../../../preferences"
+import {
+  MOBILE_UI_SCALE_MAX,
+  MOBILE_UI_SCALE_MIN,
+  MOBILE_UI_SCALE_STEP,
+  usePreferences
+} from "../../../preferences"
 import { selectLanguage } from "../../../stores/NetworkStore"
 import { getGameScene } from "../../game"
+import { toggleFullScreen, useFullScreenState } from "../../utils/fullscreen"
+import { isMobilePointer } from "../../utils/toggle"
 import { Checkbox } from "../checkbox/checkbox"
 import type { Page } from "../main-sidebar/main-sidebar"
 import { Modal } from "../modal/modal"
@@ -23,6 +30,8 @@ export default function GameOptionsModal(props: {
   page: Page
 }) {
   const [preferences, setPreferences] = usePreferences()
+  const fullscreen = useFullScreenState()
+  const mobilePointer = isMobilePointer()
   const { t, i18n } = useTranslation()
   const dispatch = useAppDispatch()
   const language = useAppSelector(
@@ -48,6 +57,7 @@ export default function GameOptionsModal(props: {
         <TabList>
           <Tab key="sound">{t("options.sound")}</Tab>
           <Tab key="interface">{t("options.interface")}</Tab>
+          {mobilePointer && <Tab key="mobile">{t("options.mobile")}</Tab>}
           <Tab key="hotkeys">{t("options.hotkeys")}</Tab>
           <Tab key="files">{t("options.game_files")}</Tab>
         </TabList>
@@ -237,6 +247,41 @@ export default function GameOptionsModal(props: {
             </div>
           )}
         </TabPanel>
+
+        {mobilePointer && (
+          <TabPanel>
+            <div className="mobile-options">
+              <p className="game-fullscreen-toggle">
+                <Checkbox
+                  isDark
+                  checked={fullscreen}
+                  onToggle={() => toggleFullScreen()}
+                  label={t("toggle_fullscreen")}
+                />
+              </p>
+              <label>
+                <span>
+                  {t("options.ui_scale")}: {preferences.mobileUiScale}%
+                </span>
+                <input
+                  type="range"
+                  min={MOBILE_UI_SCALE_MIN}
+                  max={MOBILE_UI_SCALE_MAX}
+                  step={MOBILE_UI_SCALE_STEP}
+                  value={preferences.mobileUiScale}
+                  onInput={(event) => {
+                    setPreferences({
+                      mobileUiScale: Number.parseInt(
+                        (event.target as HTMLInputElement).value,
+                        10
+                      )
+                    })
+                  }}
+                />
+              </label>
+            </div>
+          </TabPanel>
+        )}
 
         <TabPanel>
           <KeybindInfo />

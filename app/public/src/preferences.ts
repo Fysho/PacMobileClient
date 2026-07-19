@@ -18,6 +18,10 @@ export type Keybindings = {
   team_planner: string
   meta_report: string
 }
+export const MOBILE_UI_SCALE_MIN = 75
+export const MOBILE_UI_SCALE_MAX = 125
+export const MOBILE_UI_SCALE_STEP = 5
+
 export interface IPreferencesState {
   musicVolume: number
   sfxVolume: number
@@ -43,6 +47,7 @@ export interface IPreferencesState {
   antialiasing: boolean
   colorblindMode: boolean
   theme: string
+  mobileUiScale: number
 }
 
 export type PreferenceKey = keyof IPreferencesState
@@ -71,6 +76,7 @@ const defaultPreferences: IPreferencesState = {
   antialiasing: true,
   colorblindMode: false,
   theme: "pasdefault",
+  mobileUiScale: 100,
   keybindings: {
     sell: "E",
     buy_xp: "F",
@@ -123,6 +129,11 @@ function migrateLegacyKeybindings(stored: any): {
   }
 }
 
+function normalizeMobileUiScale(value: unknown): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) return 100
+  return Math.min(MOBILE_UI_SCALE_MAX, Math.max(MOBILE_UI_SCALE_MIN, value))
+}
+
 function loadPreferences(): IPreferencesState {
   if (localStore.has(LocalStoreKeys.PREFERENCES)) {
     const stored = localStore.get(LocalStoreKeys.PREFERENCES)
@@ -135,6 +146,7 @@ function loadPreferences(): IPreferencesState {
     return {
       ...defaultPreferences,
       ...migrated,
+      mobileUiScale: normalizeMobileUiScale(migrated?.mobileUiScale),
       keybindings: {
         ...defaultPreferences.keybindings,
         ...migrated?.keybindings
@@ -171,6 +183,14 @@ export function subscribeToPreference<T extends keyof IPreferencesState>(
   if (runInitially) fn(preferences[key])
   return unsubscribeToPreferences.bind(undefined, subscription)
 }
+
+subscribeToPreference(
+  "mobileUiScale",
+  (scale) => {
+    document.documentElement.style.setProperty("--mobile-ui-scale", `${scale}%`)
+  },
+  true
+)
 
 export function unsubscribeToPreferences(fn: Subscription) {
   removeInArray(subscriptions, fn)
