@@ -102,6 +102,7 @@ import {
 } from "./component/main-sidebar/main-sidebar"
 import { ConnectionStatusNotification } from "./component/system/connection-status-notification"
 import { playMusic, preloadMusic } from "./utils/audio"
+import { useLandscapeOrientationGate } from "./utils/fullscreen"
 import { LocalStoreKeys, localStore } from "./utils/store"
 import { transformEntityCoordinates } from "./utils/utils"
 
@@ -182,6 +183,7 @@ export default function Game() {
   const connected = useRef<boolean>(false)
   const [loaded, setLoaded] = useState<boolean>(false)
   const [connectError, setConnectError] = useState<string>("")
+  const portraitBlocked = useLandscapeOrientationGate(loaded)
   const [finalRank, setFinalRank] = useState<number>(0)
   enum FinalRankVisibility {
     HIDDEN,
@@ -976,32 +978,55 @@ export default function Game() {
   ])
 
   return (
-    <main id="game-wrapper" onContextMenu={(e) => e.preventDefault()}>
-      <div id="game" ref={container}></div>
-      {loaded ? (
-        <>
-          <MainSidebar page="game" leave={leave} leaveLabel={t("leave_game")} />
-          <GameFinalRank
-            rank={finalRank}
-            hide={spectateTillTheEnd}
-            leave={leave}
-            visible={finalRankVisibility === FinalRankVisibility.VISIBLE}
-          />
-          {spectate ? <GameSpectatePlayerInfo /> : <GameShop />}
-          <GameStageInfo />
-          <GamePlayers click={(id: string) => playerClick(id)} />
-          <GameSynergies />
-          <GameChoice />
-          <GameDpsMeter />
-          <GameToasts />
-          {currentGameEvent === GameEvent.EXPEDITIONS && !spectate && (
-            <GameExpeditions />
-          )}
-        </>
-      ) : (
-        <GameLoadingScreen connectError={connectError} />
+    <>
+      <main
+        id="game-wrapper"
+        aria-hidden={portraitBlocked || undefined}
+        inert={portraitBlocked || undefined}
+        onContextMenu={(e) => e.preventDefault()}
+      >
+        <div id="game" ref={container}></div>
+        {loaded ? (
+          <>
+            <MainSidebar
+              page="game"
+              leave={leave}
+              leaveLabel={t("leave_game")}
+            />
+            <GameFinalRank
+              rank={finalRank}
+              hide={spectateTillTheEnd}
+              leave={leave}
+              visible={finalRankVisibility === FinalRankVisibility.VISIBLE}
+            />
+            {spectate ? <GameSpectatePlayerInfo /> : <GameShop />}
+            <GameStageInfo />
+            <GamePlayers click={(id: string) => playerClick(id)} />
+            <GameSynergies />
+            <GameChoice />
+            <GameDpsMeter />
+            <GameToasts />
+            {currentGameEvent === GameEvent.EXPEDITIONS && !spectate && (
+              <GameExpeditions />
+            )}
+          </>
+        ) : (
+          <GameLoadingScreen connectError={connectError} />
+        )}
+        <ConnectionStatusNotification />
+      </main>
+      {portraitBlocked && (
+        <div
+          className="mobile-landscape-blocker"
+          role="alert"
+          aria-live="assertive"
+        >
+          <div className="mobile-landscape-phone" aria-hidden="true">
+            <span />
+          </div>
+          <p>{t("landscape_required")}</p>
+        </div>
       )}
-      <ConnectionStatusNotification />
-    </main>
+    </>
   )
 }

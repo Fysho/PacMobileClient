@@ -1,10 +1,4 @@
-import React, {
-  type PropsWithChildren,
-  Suspense,
-  useEffect,
-  useRef,
-  useState
-} from "react"
+import React, { Suspense } from "react"
 import { createRoot } from "react-dom/client"
 import { Provider } from "react-redux"
 import { BrowserRouter, Route, Routes } from "react-router"
@@ -20,7 +14,6 @@ import Lobby from "./pages/lobby"
 import Preparation from "./pages/preparation"
 import { SpriteDebug } from "./pages/sprite-viewer"
 import TranslationsPage from "./pages/translations"
-import { enterFullScreen } from "./pages/utils/fullscreen"
 import store from "./stores/index"
 import "./style/index.css"
 import "./theme"
@@ -33,115 +26,6 @@ if (window.top && window !== window.top) {
 // Prevent the website to be opened from window.open()
 if (window.opener) {
   window.opener.location.replace(window.location.href)
-}
-
-const MOBILE_PORTRAIT_QUERY =
-  "(hover: none) and (pointer: coarse) and (orientation: portrait)"
-
-type LockableScreenOrientation = ScreenOrientation & {
-  lock?: (orientation: "landscape") => Promise<void>
-  unlock?: () => void
-}
-
-async function requestLandscapeOrientation(): Promise<void> {
-  const orientation = screen.orientation as LockableScreenOrientation
-  if (!orientation.lock) return
-
-  try {
-    await orientation.lock("landscape")
-  } catch (error) {
-    // Most browsers only permit locking in fullscreen or an installed PWA.
-    if (document.fullscreenElement) {
-      console.info("Unable to lock landscape orientation", error)
-    }
-  }
-}
-
-function releaseOrientationLock(): void {
-  const orientation = screen.orientation as LockableScreenOrientation
-  orientation.unlock?.()
-}
-
-function LandscapeGate({ children }: PropsWithChildren) {
-  const contentRef = useRef<HTMLDivElement>(null)
-  const portraitMedia = useRef(window.matchMedia(MOBILE_PORTRAIT_QUERY))
-  const [portraitBlocked, setPortraitBlocked] = useState(
-    portraitMedia.current.matches
-  )
-
-  useEffect(() => {
-    const media = portraitMedia.current
-    const updateOrientation = () => {
-      setPortraitBlocked(media.matches)
-      if (media.matches) void requestLandscapeOrientation()
-    }
-    const updateFullscreen = () => {
-      void requestLandscapeOrientation()
-    }
-    const removeLaunchListeners = () => {
-      window.removeEventListener("pointerdown", enterOnFirstInteraction, true)
-      window.removeEventListener("keydown", enterOnFirstInteraction, true)
-    }
-    const enterOnFirstInteraction = (event: Event) => {
-      removeLaunchListeners()
-      if (
-        event.target instanceof Element &&
-        event.target.closest(".game-fullscreen-toggle")
-      ) {
-        return
-      }
-      void enterFullScreen().then(requestLandscapeOrientation)
-    }
-
-    updateOrientation()
-    media.addEventListener("change", updateOrientation)
-    document.addEventListener("fullscreenchange", updateFullscreen)
-    document.addEventListener("webkitfullscreenchange", updateFullscreen)
-    window.addEventListener("pointerdown", enterOnFirstInteraction, {
-      once: true,
-      capture: true
-    })
-    window.addEventListener("keydown", enterOnFirstInteraction, {
-      once: true,
-      capture: true
-    })
-
-    return () => {
-      media.removeEventListener("change", updateOrientation)
-      document.removeEventListener("fullscreenchange", updateFullscreen)
-      document.removeEventListener("webkitfullscreenchange", updateFullscreen)
-      removeLaunchListeners()
-      releaseOrientationLock()
-    }
-  }, [])
-
-  useEffect(() => {
-    if (contentRef.current) contentRef.current.inert = portraitBlocked
-  }, [portraitBlocked])
-
-  return (
-    <>
-      <div
-        ref={contentRef}
-        className="landscape-gate-content"
-        aria-hidden={portraitBlocked || undefined}
-      >
-        {children}
-      </div>
-      {portraitBlocked && (
-        <div
-          className="mobile-landscape-blocker"
-          role="alert"
-          aria-live="assertive"
-        >
-          <div className="mobile-landscape-phone" aria-hidden="true">
-            <span />
-          </div>
-          <p>{i18n.t("landscape_required")}</p>
-        </div>
-      )}
-    </>
-  )
 }
 
 const container = document.getElementById("root")
@@ -158,14 +42,7 @@ i18n.on("initialized", () => {
               <Route path="/auth" element={<Auth />} />
               <Route path="/lobby" element={<Lobby />} />
               <Route path="/preparation" element={<Preparation />} />
-              <Route
-                path="/game"
-                element={
-                  <LandscapeGate>
-                    <Game />
-                  </LandscapeGate>
-                }
-              />
+              <Route path="/game" element={<Game />} />
               <Route path="/after" element={<AfterGame />} />
               <Route path="/bot-builder" element={<BotBuilder />} />
               <Route path="/bot-admin" element={<BotManagerPanel />} />

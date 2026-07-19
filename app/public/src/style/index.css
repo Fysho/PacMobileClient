@@ -397,10 +397,6 @@ summary,
   image-rendering: pixelated;
 }
 
-.landscape-gate-content {
-  display: contents;
-}
-
 .mobile-landscape-blocker {
   position: fixed;
   inset: 0;
