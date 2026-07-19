@@ -3997,6 +3997,7 @@
 		"interface": "Interface",
     "mobile": "Mobile",
     "ui_scale": "UI scale",
+    "unique_users": "Unique users",
 		"hotkeys": "Hotkeys",
 		"game_files": "Game Files",
 		"sfx_volume": "SFX Volume",

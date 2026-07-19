@@ -15,6 +15,12 @@ import type { BotDifficulty } from "../../types/enum/Game"
 import type { MaintenanceOrder } from "../../types/enum/MaintenanceOrder"
 import type { SpecialGameRule } from "../../types/enum/SpecialGameRule"
 import type { IUserMetadataJSON } from "../../types/interfaces/UserMetadata"
+import {
+  MOBILE_CLIENT_ID,
+  type MobileClientUsageCountResponse,
+  type MobileClientUsageEvent,
+  type MobileClientUsageRequest
+} from "../../types/mobile-client-usage"
 import { logger } from "../../utils/logger"
 import type { IBot } from "./models/bot-v2"
 import { pacFetch } from "./pac-api"
@@ -27,6 +33,62 @@ logger.info(`Colyseus endpoint: ${PAC_WS_ORIGIN}`)
 
 export const client = new Client<typeof server>(PAC_WS_ORIGIN)
 
+const trackedMobileUsageEvents = new Set<string>()
+
+export async function trackMobileClientUsage(
+  event: MobileClientUsageEvent
+): Promise<void> {
+  const user = firebase.auth().currentUser
+  if (!user) return
+
+  const requestKey = `${user.uid}:${event}`
+  if (trackedMobileUsageEvents.has(requestKey)) return
+  trackedMobileUsageEvents.add(requestKey)
+
+  try {
+    const token = await user.getIdToken()
+    const body: MobileClientUsageRequest = {
+      client: MOBILE_CLIENT_ID,
+      event
+    }
+    const response = await fetch(
+      `${window.location.origin}/api/mobile-client-usage`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+      }
+    )
+    if (!response.ok) {
+      throw new Error(`Mobile usage request failed: ${response.status}`)
+    }
+  } catch (error) {
+    trackedMobileUsageEvents.delete(requestKey)
+    logger.warn("Unable to record mobile client usage", error)
+  }
+}
+
+export async function fetchMobileClientUniqueUsers(
+  signal?: AbortSignal
+): Promise<number> {
+  const response = await fetch(
+    `${window.location.origin}/api/mobile-client-usage/count`,
+    { cache: "no-store", signal }
+  )
+  if (!response.ok) {
+    throw new Error(`Mobile usage count request failed: ${response.status}`)
+  }
+
+  const payload = (await response.json()) as MobileClientUsageCountResponse
+  if (!Number.isSafeInteger(payload.uniqueUsers) || payload.uniqueUsers < 0) {
+    throw new Error("Invalid mobile usage count response")
+  }
+  return payload.uniqueUsers
+}
+
 export function authenticateUser() {
   if (!firebase.apps.length) {
     firebase.initializeApp(FIREBASE_CONFIG)
@@ -37,6 +99,7 @@ export function authenticateUser() {
       if (!user) return reject(CloseCodes.USER_NOT_AUTHENTICATED)
       store.dispatch(logIn(user))
       fetchProfile(true)
+      void trackMobileClientUsage("authenticated")
       resolve(user)
     })
   })
@@ -134,6 +197,7 @@ export async function leaveAllRooms() {
 export function joinLobby(room: Room<{ state: LobbyState }>) {
   leaveAllRooms()
   rooms.lobby = room
+  void trackMobileClientUsage("lobby_joined")
 }
 
 export function joinPreparation(
@@ -158,6 +222,7 @@ export function joinGame(
 ) {
   leaveAllRooms()
   rooms.game = room
+  void trackMobileClientUsage("game_joined")
   localStore.set(
     LocalStoreKeys.RECONNECTION_GAME,
     {

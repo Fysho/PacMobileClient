@@ -61,6 +61,10 @@ import {
   getMetaV2,
   getPlayerRankDistribution
 } from "./services/meta"
+import {
+  countUniqueMobileClientUsers,
+  recordMobileClientUsage
+} from "./services/mobile-client-usage"
 import { getCachedSpriteGapData } from "./services/sprite-gap-scanner"
 import {
   addTwitchBlacklistEntry,
@@ -76,6 +80,12 @@ import { DungeonPMDO } from "./types/enum/Dungeon"
 import { Emotion } from "./types/enum/Emotion"
 import { Item } from "./types/enum/Item"
 import { Pkm, PkmIndex } from "./types/enum/Pokemon"
+import {
+  isMobileClientUsageEvent,
+  MOBILE_CLIENT_ID,
+  type MobileClientUsageCountResponse,
+  type MobileClientUsageRequest
+} from "./types/mobile-client-usage"
 import { logger } from "./utils/logger"
 
 const clientSrc = __dirname.includes("server")
@@ -83,6 +93,20 @@ const clientSrc = __dirname.includes("server")
   : path.join(__dirname, "public", "dist", "client")
 const viewsSrc = path.join(clientSrc, "index.html")
 const isDevelopment = process.env.MODE === "dev"
+
+function isSameOriginRequest(req: express.Request): boolean {
+  const origin = req.get("origin")
+  const host = req.get("x-forwarded-host") ?? req.get("host")
+  const protocol =
+    req.get("x-forwarded-proto")?.split(",")[0]?.trim() ?? req.protocol
+  if (!origin || !host) return false
+
+  try {
+    return new URL(origin).origin === new URL(`${protocol}://${host}`).origin
+  } catch {
+    return false
+  }
+}
 const setCacheControl = (res: any, maxAge: number = 86400) => {
   if (!isDevelopment) {
     res.set("Cache-Control", `max-age=${maxAge}`)
@@ -699,6 +723,42 @@ export const server = defineServer({
         return null
       }
     }
+
+    app.get("/api/mobile-client-usage/count", async (_req, res) => {
+      try {
+        res.set("Cache-Control", "no-store")
+        const response: MobileClientUsageCountResponse = {
+          uniqueUsers: await countUniqueMobileClientUsers()
+        }
+        res.status(200).json(response)
+      } catch (error) {
+        logger.error("Error counting mobile client users", error)
+        res.status(500).json({ error: "Error counting mobile client users" })
+      }
+    })
+
+    app.post("/api/mobile-client-usage", async (req, res) => {
+      try {
+        const { client, event } = req.body as Partial<MobileClientUsageRequest>
+        if (client !== MOBILE_CLIENT_ID || !isMobileClientUsageEvent(event)) {
+          res.status(400).json({ error: "Invalid mobile client usage event" })
+          return
+        }
+        if (!isSameOriginRequest(req)) {
+          res.status(403).json({ error: "Invalid mobile client origin" })
+          return
+        }
+
+        const userAuth = await authUser(req, res)
+        if (!userAuth) return
+
+        await recordMobileClientUsage(userAuth.uid, event)
+        res.status(204).end()
+      } catch (error) {
+        logger.error("Error recording mobile client usage", error)
+        res.status(500).json({ error: "Error recording mobile client usage" })
+      }
+    })
 
     app.get("/profile", async (req, res) => {
       try {

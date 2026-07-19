@@ -35,3 +35,11 @@
 .game-options-modal .mobile-options input[type="range"] {
   width: 100%;
 }
+
+.game-options-modal .mobile-options .mobile-unique-users {
+  margin-top: 0.25rem;
+  padding-top: 1rem;
+  border-top: var(--border-thin);
+  font-weight: 600;
+  text-align: center;
+}

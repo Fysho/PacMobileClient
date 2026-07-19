@@ -1,12 +1,14 @@
 import Phaser from "phaser"
-import type { Dispatch, SetStateAction } from "react"
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Tab, TabList, TabPanel, Tabs } from "react-tabs"
 import { isThemeUnlocked, THEMES } from "../../../../../config"
 import { GADGETS } from "../../../../../config/game/gadgets"
 import { Language } from "../../../../../types/enum/Language"
+import { logger } from "../../../../../utils/logger"
 import { LanguageNames } from "../../../../dist/client/locales"
 import { useAppDispatch, useAppSelector } from "../../../hooks"
+import { fetchMobileClientUniqueUsers } from "../../../network"
 import {
   MOBILE_UI_SCALE_MAX,
   MOBILE_UI_SCALE_MIN,
@@ -39,6 +41,23 @@ export default function GameOptionsModal(props: {
   )
   const profile = useAppSelector((state) => state.network.profile)
   const profileLevel = profile?.level ?? 0
+  const [uniqueMobileUsers, setUniqueMobileUsers] = useState<number>()
+
+  useEffect(() => {
+    if (!props.show || !mobilePointer) return
+
+    const controller = new AbortController()
+    setUniqueMobileUsers(undefined)
+    fetchMobileClientUniqueUsers(controller.signal)
+      .then(setUniqueMobileUsers)
+      .catch((error) => {
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
+          logger.warn("Unable to fetch the mobile client user count", error)
+        }
+      })
+
+    return () => controller.abort()
+  }, [mobilePointer, props.show])
 
   const renderers = {
     [Phaser.AUTO]: "Auto",
@@ -279,6 +298,9 @@ export default function GameOptionsModal(props: {
                   }}
                 />
               </label>
+              <p className="mobile-unique-users">
+                {t("options.unique_users")} - {uniqueMobileUsers ?? "—"}
+              </p>
             </div>
           </TabPanel>
         )}
