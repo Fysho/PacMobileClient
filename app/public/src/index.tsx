@@ -40,6 +40,7 @@ const MOBILE_PORTRAIT_QUERY =
 
 type LockableScreenOrientation = ScreenOrientation & {
   lock?: (orientation: "landscape") => Promise<void>
+  unlock?: () => void
 }
 
 async function requestLandscapeOrientation(): Promise<void> {
@@ -54,6 +55,11 @@ async function requestLandscapeOrientation(): Promise<void> {
       console.info("Unable to lock landscape orientation", error)
     }
   }
+}
+
+function releaseOrientationLock(): void {
+  const orientation = screen.orientation as LockableScreenOrientation
+  orientation.unlock?.()
 }
 
 function LandscapeGate({ children }: PropsWithChildren) {
@@ -105,6 +111,7 @@ function LandscapeGate({ children }: PropsWithChildren) {
       document.removeEventListener("fullscreenchange", updateFullscreen)
       document.removeEventListener("webkitfullscreenchange", updateFullscreen)
       removeLaunchListeners()
+      releaseOrientationLock()
     }
   }, [])
 
@@ -145,24 +152,29 @@ i18n.on("initialized", () => {
     <Provider store={store}>
       <React.StrictMode>
         <Suspense fallback="loading">
-          <LandscapeGate>
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Auth />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/lobby" element={<Lobby />} />
-                <Route path="/preparation" element={<Preparation />} />
-                <Route path="/game" element={<Game />} />
-                <Route path="/after" element={<AfterGame />} />
-                <Route path="/bot-builder" element={<BotBuilder />} />
-                <Route path="/bot-admin" element={<BotManagerPanel />} />
-                <Route path="/sprite-viewer" element={<SpriteDebug />} />
-                <Route path="/map-viewer" element={<MapViewer />} />
-                <Route path="/gameboy" element={<Gameboy />} />
-                <Route path="/translations" element={<TranslationsPage />} />
-              </Routes>
-            </BrowserRouter>
-          </LandscapeGate>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<Auth />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/lobby" element={<Lobby />} />
+              <Route path="/preparation" element={<Preparation />} />
+              <Route
+                path="/game"
+                element={
+                  <LandscapeGate>
+                    <Game />
+                  </LandscapeGate>
+                }
+              />
+              <Route path="/after" element={<AfterGame />} />
+              <Route path="/bot-builder" element={<BotBuilder />} />
+              <Route path="/bot-admin" element={<BotManagerPanel />} />
+              <Route path="/sprite-viewer" element={<SpriteDebug />} />
+              <Route path="/map-viewer" element={<MapViewer />} />
+              <Route path="/gameboy" element={<Gameboy />} />
+              <Route path="/translations" element={<TranslationsPage />} />
+            </Routes>
+          </BrowserRouter>
         </Suspense>
       </React.StrictMode>
     </Provider>
